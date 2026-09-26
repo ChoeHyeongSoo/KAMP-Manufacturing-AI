@@ -9,3 +9,8 @@ jupyter==1.1.1
 nbformat==5.11.1
 nbconvert==7.17.1
 ipykernel==7.3.0
+
+# 주제 ④ X-ray 이미지 처리 (2026-09-26 검증)
+pillow==12.3.0
+opencv-python-headless==5.0.0.93
+scikit-image==0.26.0
