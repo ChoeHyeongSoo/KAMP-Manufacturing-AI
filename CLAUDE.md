@@ -17,8 +17,18 @@
   - unlabeled 비가동 고정값 블록: cn7 51.5%, rg3 36.6%
   ```
 
-- 브랜치: `main`(제출 기준, 직접 커밋 금지) / 작업은 `feat/<이니셜>-<주제>-<내용>` 브랜치 → PR.
-  - 예: `feat/CHS-01-injection-data-quality`
+- **브랜치 네이밍**: `<type>/<이니셜>-<작업내용>` — `main`(제출 기준, 직접 커밋 금지)에서 분기해 작업 후 PR.
+  - type: `feat/`(분석·모델·노트북 등 산출물 추가), `fix/`(버그·수치 오류 수정), `docs/`(README·리포트·회의록·발표자료), `test/`(검증 스크립트·재현성 점검), `chore/`(환경·설정·폴더 구조), `refactor/`(동작 변경 없는 정리)
+  - 이니셜: 성+이름 **세 글자 대문자**(예: CHS). 두 글자(HS)는 팀원 간 겹칠 수 있어 쓰지 않는다. 팀원별 이니셜은 아래 표 참고.
+  - 작업내용: 소문자·하이픈, 주제 작업이면 주제 폴더명 접두(`01-injection`, `03-press-pump`, `04-xray`)
+  - 예: `feat/CHS-01-injection-data-quality`, `docs/CHS-topic-selection-meeting`, `chore/CHS-repo-structure`, `test/CHS-run-all-reproducibility`
+  - 팀원 이니셜 (합류 시 추가):
+
+    | 이니셜 | 비고 |
+    |---|---|
+    | CHS | 레포 초기 구성, ①·③ 품질 진단 |
+    | (추가) | |
+    | (추가) | |
 - 제출물(노트북·리포트·발표자료)에는 소속·이름·로고 등 식별 정보를 넣지 않는다.
 - `.claude/`는 개인 작업 로그·로컬 설정 영역이라 git에서 제외한다(`.gitignore`). 팀과 공유할 규칙·기록은 이 파일(`CLAUDE.md`, 루트)이나 `docs/`에 남긴다.
 

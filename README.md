@@ -44,7 +44,7 @@ jupyter nbconvert --to notebook --execute --inplace 01_data_quality.ipynb
 
 ## 작업 규칙
 
-- 브랜치: `main`(제출 기준) / 작업은 `feat/<이니셜>-<주제>-<내용>` 브랜치 → PR. (예: `feat/CHS-01-injection-data-quality`)
+- 브랜치: `main`(제출 기준) / 작업은 `<type>/<이니셜 3글자>-<작업내용>` 브랜치 → PR. type은 `feat/ fix/ docs/ test/ chore/ refactor/`. (예: `feat/CHS-01-injection-data-quality`, `docs/CHS-topic-selection-meeting`) 상세는 `CLAUDE.md` 참고.
 - 노트북은 **실행 결과를 포함해서** 커밋한다 (팀원이 안 돌려도 결과를 볼 수 있게). 단, 출력이 5MB를 넘으면 figures로 빼고 출력은 지운다.
 - 원본 데이터(`data/`, `data_raw/`)는 절대 수정하지 않는다. 가공 결과는 별도 파일로.
 - 제출물에는 소속·로고 등 식별 정보를 넣지 않는다 (블라인드 평가).
