@@ -59,6 +59,8 @@ def segment_features(d: pd.DataFrame) -> pd.DataFrame:
         rows.append(row)
     out = pd.DataFrame(rows).set_index("seg_id")
     out["vib_rms"] = np.sqrt(out["AI0_Vibration_rms"] ** 2 + out["AI1_Vibration_rms"] ** 2)
+    for ch in VIB_CHANNELS + [CUR_CHANNEL]:
+        out[f"{ch}_dc_abs"] = out[f"{ch}_dc"].abs()
     return out
 
 
@@ -113,18 +115,24 @@ def operating_state_summary(f_normal: pd.DataFrame, state_col: str = "state",
 def build_segments_table(save: bool = True) -> pd.DataFrame:
     """normal+outlier 세그먼트 피처를 합쳐 등급·운전상태를 붙인 표를 만들고 저장한다.
 
-    산출 컬럼: seg_uid, src, seg_id, start, len, label, (피처...), grade(이상만), state(정상만)
+    산출 컬럼: seg_uid, src, seg_id, start, len, label, (피처...),
+    vib_grade/cur_grade(이상만, 진동 기준/전류 기준 각각의 등급), state(정상만)
+
+    진동 기준(vib_grade)과 전류 기준(cur_grade) 등급이 갈리는 세그먼트(예: 19·20 — 진동은
+    "정상 유사"인데 전류는 "확실 이상")가 있으므로, 하나의 등급으로 뭉개지 않고 두 열을 모두 남긴다.
     """
     dfs = dq.load_all()
     N, O = dfs["normal"], dfs["outlier"]
     fN = segment_features(N)
     fO = segment_features(O)
 
-    fO["grade"] = grade_outlier_segments(fO, fN)
+    fO["vib_grade"] = grade_outlier_segments(fO, fN, col="vib_rms")
+    fO["cur_grade"] = grade_outlier_segments(fO, fN, col="AI2_Current_dc_abs")
     best_k, results, X = choose_k_operating_states(fN)
     fN["state"] = results[best_k][0]
 
-    fN["grade"] = pd.NA
+    fN["vib_grade"] = pd.NA
+    fN["cur_grade"] = pd.NA
     fO["state"] = pd.NA
 
     both = pd.concat([fN, fO], axis=0)
@@ -165,12 +173,20 @@ def separability_auc(f_normal: pd.DataFrame, f_outlier: pd.DataFrame, col: str) 
 def window_auc_table(d_normal: pd.DataFrame, d_outlier: pd.DataFrame,
                       windows_sec: tuple[float, ...] = (1, 2, 3, 5), fs: float = 10.0,
                       channels: tuple[str, ...] = (VIB_CHANNELS[0], VIB_CHANNELS[1], CUR_CHANNEL)) -> pd.DataFrame:
-    """세그먼트 경계를 넘지 않는 이동 RMS(`dq.rolling_rms` 재사용)로 윈도우 길이별 AUC를 구한다."""
+    """세그먼트 경계를 넘지 않는 이동 RMS(`dq.rolling_rms` 재사용)로 윈도우 길이별 AUC를 구한다.
+
+    **주의(선택 효과)**: 윈도우가 길어질수록 그 윈도우를 채울 수 있는(길이 >= win) 이상 세그먼트 수 자체가
+    줄어든다(예: 5초=50샘플 윈도우는 길이 50인 이상 세그먼트 5개만 참여). `n_outlier_segments_qualify`로
+    이 효과를 같이 보여주므로, 윈도우 간 AUC를 비교할 때 표본이 달라졌다는 점을 함께 읽어야 한다.
+    (동일 세그먼트 집합으로 고정한 공정 비교는 `window_auc_fixed_length` 참고.)
+    """
     rows = []
+    seg_len_out = d_outlier.groupby("seg").size()
     for sec in windows_sec:
         win = int(round(sec * fs))
         rN = dq.rolling_rms(d_normal, win=win)
         rO = dq.rolling_rms(d_outlier, win=win)
+        n_outlier_segments_qualify = int((seg_len_out >= win).sum())
         for ch in channels:
             rn = rN[ch].dropna()
             ro = rO[ch].dropna()
@@ -178,13 +194,43 @@ def window_auc_table(d_normal: pd.DataFrame, d_outlier: pd.DataFrame,
             x = np.r_[rn.to_numpy(), ro.to_numpy()]
             auc = roc_auc_score(y, x)
             rows.append({"window_sec": sec, "channel": ch, "auc": round(max(auc, 1 - auc), 4),
-                         "n_normal": len(rn), "n_outlier": len(ro)})
+                         "n_normal": len(rn), "n_outlier": len(ro),
+                         "n_outlier_segments_qualify": n_outlier_segments_qualify})
     return pd.DataFrame(rows)
+
+
+def window_auc_fixed_length(d_normal: pd.DataFrame, d_outlier: pd.DataFrame, length: int = 50,
+                             windows_sec: tuple[float, ...] = (1, 2, 3, 5), fs: float = 10.0,
+                             channels: tuple[str, ...] = (VIB_CHANNELS[0], VIB_CHANNELS[1], CUR_CHANNEL)) -> pd.DataFrame:
+    """길이가 정확히 `length`인 세그먼트끼리만(정상·이상 동일 집합) 윈도우별 AUC를 비교한다.
+
+    `window_auc_table`은 윈도우가 길어질수록 참여하는 이상 세그먼트 수가 줄어드는 선택 효과가 있어
+    윈도우 간 비교가 공정하지 않다. 이 함수는 세그먼트 집합을 고정해 그 효과를 제거한다(다만 세그먼트
+    수 자체가 애초에 작으면 - 예: 이상 길이 50 세그먼트 5개 - 5초 지점은 여전히 표본이 작다는 한계가 남는다).
+    """
+    segN_len = d_normal.groupby("seg").size()
+    segO_len = d_outlier.groupby("seg").size()
+    segs_n = segN_len[segN_len == length].index
+    segs_o = segO_len[segO_len == length].index
+    dN = d_normal[d_normal["seg"].isin(segs_n)]
+    dO = d_outlier[d_outlier["seg"].isin(segs_o)]
+    tab = window_auc_table(dN, dO, windows_sec=windows_sec, fs=fs, channels=channels)
+    tab = tab.drop(columns=["n_outlier_segments_qualify"])
+    tab["n_normal_segments_fixed"] = len(segs_n)
+    tab["n_outlier_segments_fixed"] = len(segs_o)
+    return tab
 
 
 def leakage_free_fpr_table(d_normal: pd.DataFrame, win: int, channel: str,
                             fractions: tuple[float, ...] = (0.2, 0.4, 0.6, 0.8), q: float = 0.99) -> pd.DataFrame:
-    """세그먼트 순서(시간순) 앞 f% 세그먼트로 임계(q분위)를 잡고 나머지 정상 세그먼트의 오경보율을 본다."""
+    """세그먼트 순서(시간순) 앞 f% 세그먼트로 임계(q분위)를 잡고 나머지 정상 세그먼트의 오경보율을 본다.
+
+    오경보율은 두 단위로 함께 낸다: **샘플 단위**(`fpr_sample`, 윈도우 하나하나가 임계 초과했는지)와
+    **세그먼트 단위**(`fpr_segment`, 세그먼트 안에 임계 초과 윈도우가 하나라도 있으면 그 세그먼트 전체를
+    "오경보 1건"으로 셈). 현장에서는 세그먼트(=한 번의 점검 burst) 단위로 경보가 발생하므로 세그먼트
+    단위 오경보율이 실제 운영 지표에 더 가깝다. 세그먼트 단위는 윈도우를 하나도 완성 못하는(길이<win)
+    세그먼트를 분모에서 제외한다(`n_test_seg_valid`).
+    """
     seg_ids = np.sort(d_normal["seg"].unique())
     n_segs = len(seg_ids)
     rms = dq.rolling_rms(d_normal, win=win)[channel]
@@ -196,10 +242,20 @@ def leakage_free_fpr_table(d_normal: pd.DataFrame, win: int, channel: str,
         test_mask = d_normal["seg"].isin(test_segs).to_numpy()
         thr = rms[train_mask].dropna().quantile(q)
         test_vals = rms[test_mask].dropna()
-        fpr = float((test_vals > thr).mean()) if len(test_vals) else np.nan
+        fpr_sample = float((test_vals > thr).mean()) if len(test_vals) else np.nan
+
+        test_df = d_normal.loc[test_mask, ["seg"]].copy()
+        test_df["rms"] = rms[test_mask]
+        g = test_df.groupby("seg")["rms"]
+        n_valid = g.apply(lambda s: s.notna().sum())
+        seg_exceed = g.apply(lambda s: bool((s.dropna() > thr).any()))
+        valid_segs = n_valid[n_valid > 0].index
+        fpr_segment = float(seg_exceed.loc[valid_segs].mean()) if len(valid_segs) else np.nan
+
         rows.append({"train_frac": frac, "n_train_seg": k, "n_test_seg": n_segs - k,
                      "threshold_q99": round(float(thr), 4), "n_test_samples": len(test_vals),
-                     "fpr": round(fpr, 4)})
+                     "fpr_sample": round(fpr_sample, 4),
+                     "n_test_seg_valid": int(len(valid_segs)), "fpr_segment": round(fpr_segment, 4)})
     return pd.DataFrame(rows)
 
 
