@@ -2,8 +2,8 @@
 
 `data_quality.load`/`segment_table`/`rolling_rms`/`zero_crossing_period`를 재사용해
 세그먼트별 피처표를 만들고, 이상 21세그먼트의 3등급과 정상 599세그먼트의 운전 상태를
-붙인 `data_processed/segments.csv`를 만드는 함수를 제공한다.
-data_processed/는 git 제외 대상이므로 이 파일의 함수로 언제든 재생성한다.
+붙인 `data/processed/segments.csv`를 만드는 함수를 제공한다.
+data/processed/는 git 제외 대상이므로 이 파일의 함수로 언제든 재생성한다.
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from sklearn.preprocessing import StandardScaler
 import data_quality as dq
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_PROCESSED_DIR = ROOT / "data_processed"
+DATA_PROCESSED_DIR = ROOT / "data" / "processed"
 
 VIB_CHANNELS = ["AI0_Vibration", "AI1_Vibration"]
 CUR_CHANNEL = "AI2_Current"

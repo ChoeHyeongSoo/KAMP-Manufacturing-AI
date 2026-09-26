@@ -25,7 +25,7 @@
 
 **활용 아이디어**: 운전 상태(state)를 조건부 임계값(state별 문턱)이나 피처 정규화 기준으로 쓸 수 있다.
 
-**모델 단계 반영**: `data_processed/segments.csv`(620행 = 정상 599 + 이상 21, 26열)를 GroupKFold의 그룹 키·soft label 원천으로 쓴다. 등급은 **채널별로 분리**(`vib_grade`, `cur_grade`)해 soft label로 쓴다 — 세그먼트 19·20처럼 한쪽 채널만 이상을 보이는 경우를 "정상"으로 단정하지 않는다. `state`는 정상 세그먼트의 운전 상태 피처 또는 층화 기준으로 쓴다. `data_processed/`는 git 제외 대상이라 `segments.build_segments_table()` 호출로 언제든 재생성한다.
+**모델 단계 반영**: `data/processed/segments.csv`(620행 = 정상 599 + 이상 21, 26열)를 GroupKFold의 그룹 키·soft label 원천으로 쓴다. 등급은 **채널별로 분리**(`vib_grade`, `cur_grade`)해 soft label로 쓴다 — 세그먼트 19·20처럼 한쪽 채널만 이상을 보이는 경우를 "정상"으로 단정하지 않는다. `state`는 정상 세그먼트의 운전 상태 피처 또는 층화 기준으로 쓴다. `data/processed/`는 git 제외 대상이라 `segments.build_segments_table()` 호출로 언제든 재생성한다.
 
 ---
 
@@ -213,5 +213,5 @@
 - `notebooks/02_diagnosis_deep.ipynb` — 실행 결과 포함, 에러 셀 0
 - `src/segments.py` — `segment_features`(DC 절대값 포함), `grade_outlier_segments`, `choose_k_operating_states`, `operating_state_summary`, `build_segments_table`(vib_grade/cur_grade 분리), `within_segment_corr`, `separability_auc`, `window_auc_table`(선택 효과 열 포함), `window_auc_fixed_length`(신규), `leakage_free_fpr_table`(세그먼트 단위 FPR 포함), `detection_delay_table`, `outlier_trend`
 - `src/signal_checks.py` — `resolution_table`, `clipping_check`, `dc_offset_auc`(버그 수정), `quantization_multiple_share`(신규), `decimal_places_table`(신규), `zero_crossing_by_segment`, `zero_crossing_demeaned_by_segment`(신규), `alias_candidates`, `fft_spectrum`, `autocorr`
-- `data_processed/segments.csv` — `segments.build_segments_table()`로 재생성(git 제외 대상, 코드로만 남김). 620행(정상 599+이상 21) × 26열
+- `data/processed/segments.csv` — `segments.build_segments_table()`로 재생성(git 제외 대상, 코드로만 남김). 620행(정상 599+이상 21) × 26열
 - `figures/02_*.png` — 7장(segment_grades, operating_states, fft_alias, outlier_trend, window_auc, detection_delay, channel_relation)
