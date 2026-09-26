@@ -8,12 +8,19 @@
 | `notebooks/01_data_quality.ipynb` | 데이터 품질 진단 (실행 결과 포함) |
 | `reports/01_data_quality.md` | 진단 요약 리포트 — 이슈 Top 5, 필요 처리 표, 총평 |
 | `src/data_quality.py` | 로딩·세그먼트·이동 RMS 함수 |
-| `figures/` | 리포트 그림 5장 |
+| `notebooks/02_diagnosis_deep.ipynb` | 추가 진단 — 세그먼트 등급·운전 상태·신호 해상도·에일리어싱·윈도우 민감도·탐지 지연 (실행 결과 포함) |
+| `reports/02_diagnosis_deep.md` | 추가 진단 요약 리포트 — 절별 가설/결과/모델 단계 반영, 끝에 모델 단계 반영 사항 표 |
+| `src/segments.py`, `src/signal_checks.py` | 세그먼트 피처·등급·운전상태·윈도우 민감도 / 신호 해상도·에일리어싱 진단 함수 |
+| `figures/` | 리포트 그림 5장(01) + 7장(02) |
 
 ## 핵심 진단 (요약)
 - 10 Hz, 최대 5초 burst 단위 수집. 정상 1일 77분 / 이상 **1일 2분 46초(이벤트 1건)**
 - 날짜 = 라벨 → 절대 시간 피처 금지, 세그먼트 단위 분할 필수
 - 전류는 60 Hz AC가 10 Hz로 에일리어싱된 파형 → FFT 무의미, 진폭 통계만 사용
 - 이상 파일 안에 조용한 세그먼트 12%(FN 라벨 노이즈), 정상 안에 저부하 구간(FP 후보)
+- (02) 이상 21세그먼트 중 확실 이상 18 / 정상 유사 3(세그먼트 3·19·20), 정상은 k-means로 고부하·저부하 2상태 분리
+- (02) DC 오프셋 단독 AUC 0.50~0.53 → 오프셋 자체의 누수 근거는 약함
+- (02) 윈도우 1~3초에서 진동 RMS AUC 0.81~0.92, 탐지 지연 중앙값 0.9초, 정상 20%만으로 임계값 설정 시 오경보율 1.47%
 
 재실행: `cd notebooks && PYTHONUTF8=1 jupyter nbconvert --to notebook --execute --inplace 01_data_quality.ipynb`
+재실행(02): `cd notebooks && PYTHONUTF8=1 jupyter nbconvert --to notebook --execute --inplace 02_diagnosis_deep.ipynb`
