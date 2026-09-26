@@ -31,11 +31,17 @@ def marker_mode_is_min(U: pd.DataFrame, cols: list[str] = IDLE_MARKER_COLS) -> p
 
 
 def marker_agreement_count(df: pd.DataFrame, cols: list[str] = IDLE_MARKER_COLS) -> pd.Series:
-    """각 행에서 6개 마커 변수 중 (해당 파일 자체의) 최빈값과 일치하는 개수."""
+    """각 행에서 6개 마커 변수 중 '정지 상태 값'(= 해당 파일의 최솟값)과 일치하는 개수.
+
+    unlabeled에서 마커 최빈값 == 최솟값(정지 시 물리적 하한)임을 확인했으므로(marker_mode_is_min),
+    비가동 근접도의 기준값은 최솟값이다. 파일 자체의 최빈값을 기준으로 삼으면 labeled처럼 비가동이 없는
+    파일에서는 최빈값이 '평상 가동 설정값'이 되어, 정상 가동 행을 비가동으로 잘못 센다.
+    unlabeled는 최빈값==최솟값이라 결과가 같다.
+    """
     cnt = pd.Series(0, index=df.index)
     for c in cols:
-        mode_v = df[c].mode().iloc[0]
-        cnt = cnt + (df[c] == mode_v).astype(int)
+        idle_v = df[c].min()
+        cnt = cnt + (df[c] == idle_v).astype(int)
     return cnt
 
 

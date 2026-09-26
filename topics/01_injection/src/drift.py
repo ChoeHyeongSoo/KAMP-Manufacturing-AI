@@ -15,18 +15,31 @@ import data_quality as dq
 # ③ 드리프트 · 시간 누수
 # ---------------------------------------------------------------------------
 
-def _psi(base: np.ndarray, cur: np.ndarray, bins: int = 10) -> float:
-    edges = np.quantile(base, np.linspace(0, 1, bins + 1))
-    edges = np.unique(edges)
-    if len(edges) < 3:
+def _psi(base: np.ndarray, cur: np.ndarray, bins: int = 10, eps: float = 1e-4) -> float:
+    """기준 블록(base) 대비 PSI.
+
+    - 연속형: base 분위수로 내부 경계를 잡고 양 끝은 -inf/+inf로 열어 둔다
+      (base 범위 밖 값이 버려지지 않도록 — 드리프트 신호가 바로 그 범위 밖 값이다).
+    - 이산형(base 고유값 <= bins): base·cur 값의 합집합을 범주로 쓴다
+      (분위수 경계가 붕괴해 PSI=0 으로 떨어지는 것을 막는다).
+    - 0-count 구간은 eps 비율로 바닥 처리한다(값이 커질수록 eps에 포화되므로 PSI>~10은 순위 비교용이 아님).
+    """
+    base = np.asarray(base)
+    cur = np.asarray(cur)
+    ub = np.unique(base)
+    if len(ub) <= bins:
+        cats = np.union1d(ub, np.unique(cur))
+        b_cnt = np.array([(base == v).sum() for v in cats])
+        c_cnt = np.array([(cur == v).sum() for v in cats])
+    else:
+        inner = np.unique(np.quantile(base, np.linspace(0, 1, bins + 1)))[1:-1]
+        edges = np.concatenate(([-np.inf], inner, [np.inf]))
+        b_cnt, _ = np.histogram(base, bins=edges)
+        c_cnt, _ = np.histogram(cur, bins=edges)
+    if len(b_cnt) < 2:
         return 0.0
-    edges = edges.copy()
-    edges[0] -= 1e-9
-    edges[-1] += 1e-9
-    b_cnt, _ = np.histogram(base, bins=edges)
-    c_cnt, _ = np.histogram(cur, bins=edges)
-    b_pct = np.where(b_cnt == 0, 1e-4, b_cnt / b_cnt.sum())
-    c_pct = np.where(c_cnt == 0, 1e-4, c_cnt / c_cnt.sum())
+    b_pct = np.clip(b_cnt / b_cnt.sum(), eps, None)
+    c_pct = np.clip(c_cnt / c_cnt.sum(), eps, None)
     return float(np.sum((c_pct - b_pct) * np.log(c_pct / b_pct)))
 
 
