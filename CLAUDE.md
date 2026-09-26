@@ -37,6 +37,16 @@
 - 제출물(노트북·리포트·발표자료)에는 소속·이름·로고 등 식별 정보를 넣지 않는다.
 - `.claude/`는 개인 작업 로그·로컬 설정 영역이라 git에서 제외한다(`.gitignore`). 팀과 공유할 규칙·기록은 이 파일(`CLAUDE.md`, 루트)이나 `docs/`에 남긴다.
 
+## 폴더·파일 규칙 (필수 — 상세 표는 README "폴더별 작업 방법")
+
+- 새 노트북은 `notebooks/_template.ipynb`를 복사해 `<번호>_<내용>_<이니셜>.ipynb`로 만든다. 번호 대역: 0x 진단 · 1x 전처리·피처 · 2x 모델 · 3x 분석. 셀 안의 `NB`는 파일명(확장자 제외)과 같게.
+- 그림·결과는 `FIG, RES = paths.nb_dirs(NB)`로 받은 노트북 전용 폴더(`figures/<노트북명>/`, `results/<노트북명>/`)에만 저장한다. `figures/` 바로 아래나 남의 폴더에 쓰지 않는다.
+- 경로는 `src/paths.py` 상수만 쓴다(절대경로·`../` 하드코딩 금지). 긴 로직은 노트북이 아니라 `src/` 역할별 모듈(`preprocess`/`split`/`features`/`models`/`evaluate`)에 둔다.
+- 노트북 1개 = 담당자 1명. 남의 노트북은 수정하지 않는다. `src/` 공통 파일(`paths`·`preprocess`·`split`) 변경은 작은 PR로 분리한다.
+- 모델 노트북은 `RES / "metrics.csv"`에 공통 컬럼(`model, split, fold, auc, fpr_sample, fpr_segment, delay_median_s`)으로 저장한다(`results/README.md`).
+- `data/processed/`에 새 파일을 만들면 파일명 앞에 노트북 번호를 붙이고 `data/README.md` 표에 등록한다.
+- 개인 실험은 `notebooks/scratch/`(git 제외)에서 한다.
+
 ## 심사 기준 (100점) — 모든 작업은 아래 배점 중 무엇에 기여하는지 염두에 두고 진행한다
 
 | 문항 | 배점 | 방향 |

@@ -1,15 +1,19 @@
-# results/ — 모델 비교·평가 결과 (git 포함)
+# results/ — 모델 평가 결과 (git 포함)
 
-노트북을 재실행하지 않아도 팀원이 모델 성능을 확인할 수 있도록, 모델링 단계 산출물 중 **표·수치**는
-여기에 CSV로 남긴다(대용량 원본 데이터나 모델 가중치가 아니라 "결과"만). 모델 가중치(`*.pkl`, `*.joblib`,
-`*.pt` 등)는 `models/`에 저장하며 `models/`는 `.gitignore`에 있어 git에는 올라가지 않는다.
+노트북을 다시 돌리지 않아도 팀원이 성능을 확인할 수 있도록 **표·수치(CSV)** 만 남긴다.
+모델 가중치는 `models/`(git 제외)에 둔다.
 
-## 권장 파일
+## 규칙
 
-| 파일 | 내용 |
-|---|---|
-| `model_comparison.csv` | 심사기준 2번(베이스라인 포함 2개 이상 모델 비교) 대응 — 모델별 지표(정밀도/재현율/F1/AUC, 탐지 지연, 오경보율 등) 한 줄씩 |
-| `cv_scores_<model>.csv` | 모델별 GroupKFold(또는 시간 블록) fold별 점수 |
-| `error_cases.csv` | 심사기준 3번(FN/FP 오류분석) 대응 — 오분류(또는 미탐지/오경보) 세그먼트 목록과 조건 |
+- 노트북마다 `results/<노트북명>/` 하위 폴더에만 쓴다 (`FIG, RES = paths.nb_dirs(NB)`의 `RES`). 남의 폴더는 수정하지 않는다.
+- 모델 노트북(2x)은 `RES / "metrics.csv"`에 아래 공통 컬럼으로 한 줄 이상 저장한다 — 비교표를 자동으로 합치기 위함.
 
-파일명은 위 규칙을 따르되, 모델이 늘어나면 `cv_scores_<model>.csv`처럼 모델명을 붙여 여러 개 두면 된다.
+  | 컬럼 | 예 |
+  |---|---|
+  | `model` | `rule_rms`, `iforest` |
+  | `split` | `group_kfold_seg`, `time_block` |
+  | `fold` | `0`~`4`, 전체 평균은 `mean` |
+  | `auc`, `fpr_sample`, `fpr_segment`, `delay_median_s` | 지표값 (없으면 빈칸) |
+
+- 필요하면 `cv_scores.csv`(fold별 상세), `error_cases.csv`(FN/FP 세그먼트 목록)를 같은 폴더에 추가한다.
+- 모델 비교표 `results/model_comparison.csv`는 분석 노트북(3x)이 각 `*/metrics.csv`를 모아 생성한다. 직접 편집하지 않는다.

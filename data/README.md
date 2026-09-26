@@ -12,3 +12,12 @@ data/
 
 - `raw/`는 `python src/extract.py`로 만든다. 노트북에서 `data_quality.load()`를 호출할 때 파일이 없으면 자동으로 해제한다.
 - `raw/`, `processed/`, zip은 모두 git 제외. 가공 결과는 원본을 덮어쓰지 않고 `processed/`에 별도 파일로 남긴다.
+
+## processed/ 파일 계약
+
+`processed/`는 git에 올라가지 않으므로, 단계 간에 주고받는 파일은 **아래 표에 등록**해 누가 만들고 무엇이 들어 있는지 공유한다.
+파일명 앞에는 만든 노트북 번호를 붙인다(예: `11_window_features.parquet`). 파일을 새로 만들거나 컬럼을 바꾸면 같은 PR에서 이 표를 갱신한다.
+
+| 파일 | 생성 (노트북 / 함수) | 내용 |
+|---|---|---|
+| `segments.csv` | `02_diagnosis_deep` / `segments.build_segments_table()` | 세그먼트 620행(정상 599 + 이상 21) × 26열, `seg_uid`·`vib_grade`·`cur_grade`·`state` |
