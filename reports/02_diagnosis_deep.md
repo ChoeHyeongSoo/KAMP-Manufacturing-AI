@@ -214,4 +214,4 @@
 - `src/segments.py` — `segment_features`(DC 절대값 포함), `grade_outlier_segments`, `choose_k_operating_states`, `operating_state_summary`, `build_segments_table`(vib_grade/cur_grade 분리), `within_segment_corr`, `separability_auc`, `window_auc_table`(선택 효과 열 포함), `window_auc_fixed_length`(신규), `leakage_free_fpr_table`(세그먼트 단위 FPR 포함), `detection_delay_table`, `outlier_trend`
 - `src/signal_checks.py` — `resolution_table`, `clipping_check`, `dc_offset_auc`(버그 수정), `quantization_multiple_share`(신규), `decimal_places_table`(신규), `zero_crossing_by_segment`, `zero_crossing_demeaned_by_segment`(신규), `alias_candidates`, `fft_spectrum`, `autocorr`
 - `data/processed/segments.csv` — `segments.build_segments_table()`로 재생성(git 제외 대상, 코드로만 남김). 620행(정상 599+이상 21) × 26열
-- `figures/02_*.png` — 7장(segment_grades, operating_states, fft_alias, outlier_trend, window_auc, detection_delay, channel_relation)
+- `figures/02_diagnosis_deep/02_*.png` — 7장(segment_grades, operating_states, fft_alias, outlier_trend, window_auc, detection_delay, channel_relation)

@@ -25,29 +25,29 @@
 ## 3. 품질 이슈 Top 5
 
 ### ① 이상 이벤트가 1건(1일, 2분 46초, 21 burst)뿐
-![](../figures/label_imbalance.png)
+![](../figures/01_data_quality/label_imbalance.png)
 
 - 샘플 기준 이상 비율 2.9%, 세그먼트 기준 3.4%, **이벤트 기준 1건**.
 - 어떤 F1 점수도 "이 사건 1개를 맞췄다"는 의미라서 일반화 성능을 주장할 수 없다. 오버샘플링은 같은 사건을 복제할 뿐이라 의미가 없다.
 - 정상도 하루치 77분이라 "다른 날의 정상을 이상으로 잡는 오경보율"을 데이터로 검증할 수 없다.
 
 ### ② 날짜·시간이 곧 라벨 (누수)
-![](../figures/timeline_vibration.png)
+![](../figures/01_data_quality/timeline_vibration.png)
 
 - 정상은 07-12, 이상은 07-17. TimeStamp나 원본 인덱스를 피처에 넣으면 100% 분류된다. 절대 시간 피처 금지.
 - 데이터는 연속 스트림이 아니라 **최대 50샘플(5초) burst 단위**로 수집되고 burst 사이 2~17초 공백이 있다. 같은 burst의 샘플을 train/test에 나누면 인접 샘플이 답을 알려주므로 **분할은 세그먼트 단위**여야 한다.
 
-![](../figures/segment_length_hist.png)
+![](../figures/01_data_quality/segment_length_hist.png)
 
 ### ③ 전류는 10 Hz로 에일리어싱된 AC 파형
-![](../figures/current_waveform.png)
+![](../figures/01_data_quality/current_waveform.png)
 
 - 전류가 ±270 사이를 오가는 정현파. 실제 모터 전류는 60 Hz AC인데 샘플링이 10 Hz(나이키스트 5 Hz)라 **겉보기 주기 약 1.5초의 에일리어싱 파형**이다 (추정).
 - 따라서 **FFT·스펙트럼 분석은 무의미**하고, RMS·피크·crest factor 같은 진폭 통계만 신뢰할 수 있다. 예지보전의 표준 기법(베어링 결함 주파수 등)을 쓸 수 없다.
 - 순간값은 위상에 따라 −270~+270 어디든 올 수 있어 **샘플 단위 분류는 부적절**. 윈도우(1~5초) 요약 피처가 필수.
 
 ### ④ 이상 파일 안에 "조용한" 세그먼트, 정상 파일 안에 "저부하" 구간
-![](../figures/rms_distribution.png)
+![](../figures/01_data_quality/rms_distribution.png)
 
 - 이상 데이터의 진동은 정상 대비 AI0 표준편차 **6배**(0.07→0.45), AI1 2배, 이동 RMS 중앙값 3배. 전류 |값|>300은 정상 0%, 이상 8%. 대부분 구간은 진폭만으로 분리된다.
 - 그러나 **이상 세그먼트 3, 19, 20(72샘플, 12%)은 진동 표준편차가 정상보다 작다**. 라벨이 "이상 시간대"에 통째로 붙은 것이라 세그먼트 단위로는 정상 구간이 섞여 있다. 이 구간은 모델의 **FN(미탐지)으로 집계되지만 실제로는 라벨 노이즈**다.
@@ -76,4 +76,4 @@
 ## 6. 산출물
 - `notebooks/01_data_quality.ipynb` — 실행 결과 포함
 - `src/data_quality.py` — `load_all`, `segment_table`, `rolling_rms`, `zero_crossing_period`, `outlier_table`
-- `figures/*.png` — 본문 그림 5장
+- `figures/01_data_quality/*.png` — 본문 그림 5장
