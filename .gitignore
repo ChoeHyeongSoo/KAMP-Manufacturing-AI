@@ -1,0 +1,28 @@
+# 원본 데이터 (용량·저작권) — data/README.md 참고
+data/*.zip
+data/*/
+topics/*/data_raw/
+topics/*/data_processed/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# 모델 산출물 (필요 시 Git LFS 또는 릴리즈로 공유)
+topics/*/models/
+*.pkl
+*.joblib
+*.h5
+*.pt
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 에이전트 로컬 작업 영역 (개인 작업일지·설정 — 팀 공유 규칙은 루트 CLAUDE.md 참고)
+.claude/
