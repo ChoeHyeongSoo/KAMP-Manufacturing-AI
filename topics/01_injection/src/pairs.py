@@ -55,6 +55,25 @@ def pair_table(df: pd.DataFrame, label_col: str = LABEL) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def duplicate_gap_stats(df: pd.DataFrame, label_col: str | None = LABEL) -> pd.DataFrame:
+    """같은 X(24변수, 8자리 반올림 키)를 가진 행들의 인덱스 간 연속 간격(gap) 분포.
+
+    labeled의 "쌍"(그룹 크기 2)뿐 아니라 unlabeled처럼 그룹 크기가 2보다 클 수 있는 완전 중복도 다루기 위해,
+    정렬된 인덱스의 연속 차분(diff)을 전부 모은다(그룹 크기 n이면 차분 n-1개). A-1(unlabeled 완전 중복 18%와
+    labeled 쌍이 같은 메커니즘인지)의 비교용.
+    """
+    X = df.drop(columns=[label_col]) if label_col and label_col in df.columns else df
+    key = dq.row_key(X)
+    rows = []
+    for k, sub_idx in df.index.to_series().groupby(key.values):
+        idxs = sorted(sub_idx.tolist())
+        if len(idxs) < 2:
+            continue
+        for g in np.diff(idxs):
+            rows.append({"key": k, "group_size": len(idxs), "gap": int(g)})
+    return pd.DataFrame(rows)
+
+
 def order_bias_test(pt: pd.DataFrame) -> dict:
     """충돌 쌍(01)에서 불량 행이 첫 번째/두 번째 중 어디에 오는지 편향을 검정한다."""
     conflict = pt[pt["pattern"] == "01"]
@@ -99,30 +118,41 @@ def mannwhitney_conflict_vs_agree(df: pd.DataFrame, pt: pd.DataFrame, label_col:
 # ---------------------------------------------------------------------------
 
 def target_variants(df: pd.DataFrame, label_col: str = LABEL):
-    """타깃 정의 3안(max / mean>=0.5 / 충돌 제외)에 대한 (X, y, group) 튜플을 만든다."""
+    """타깃 정의 후보(max / mean>=0.5 / min / 충돌 제외)에 대한 (X, y, group) 튜플을 만든다.
+
+    그룹 크기가 항상 1~2이므로 실제로 서로 다른 이진 결정을 내리는 것은 **max와 min 둘뿐**이다
+    (mean>=0.5는 max와 항상 같은 결정을 내린다 — 아래 참고).
+    - max: 충돌 쌍(그룹 내 라벨이 갈리는 경우)을 **양성**으로 본다("불량 의심 포함", 재현율 우선).
+    - min: 충돌 쌍을 **음성**으로 본다("두 기록이 모두 불량이어야 확정 불량", 정밀도 우선/보수적 라벨링).
+    - exclude_conflict: 충돌 쌍 행을 아예 제거한다(양성이 0개로 줄어들 수 있어 불안정 — 참고용으로만 남긴다).
+    """
     X = df.drop(columns=[label_col])
     y = df[label_col]
     key = dq.row_key(X)
-    agg = pd.DataFrame({"y": y.to_numpy(), "key": key.to_numpy()}).groupby("key")["y"].agg(["max", "mean", "nunique"])
+    agg = pd.DataFrame({"y": y.to_numpy(), "key": key.to_numpy()}).groupby("key")["y"].agg(
+        ["max", "mean", "min", "nunique"])
     y_max = key.map(agg["max"]).astype(int)
     y_mean_bin = (key.map(agg["mean"]) >= 0.5).astype(int)
+    y_min = key.map(agg["min"]).astype(int)
     is_conflict = key.map(agg["nunique"] > 1).astype(bool)
 
     variants = {
         "max": (X, y_max, key),
         "mean_ge_0.5": (X, y_mean_bin, key),
+        "min": (X, y_min, key),
         "exclude_conflict": (X[~is_conflict], y[~is_conflict], key[~is_conflict]),
     }
-    group_pos = int((agg["max"] > 0).sum())  # 그룹(샷) 단위 고유 불량 수
+    group_pos = int((agg["max"] > 0).sum())  # 그룹(샷) 단위 고유 불량 수(=max 기준)
     group_soft_pos = float(agg["mean"].sum())  # 그룹 단위 기대 양성 수(충돌=0.5로 카운트)
-    group_pure_pos = int(((agg["nunique"] == 1) & (agg["max"] == 1)).sum())  # 모호하지 않은 고유 불량 수
+    group_pure_pos = int(((agg["nunique"] == 1) & (agg["max"] == 1)).sum())  # min 기준 양성 그룹 수(모호하지 않은 불량)
     meta = {"group_pos": group_pos, "group_soft_pos": group_soft_pos, "group_pure_pos": group_pure_pos,
             "n_groups": int(len(agg)), "n_conflict_groups": int((agg["nunique"] > 1).sum())}
     return variants, meta
 
 
 def cv_f1_by_target(df: pd.DataFrame, label_col: str = LABEL, n_splits: int = 5, random_state: int = 0) -> pd.DataFrame:
-    """타깃 정의 3안 각각에 대해 GroupKFold(X-키) 5-fold 로지스틱(class_weight='balanced') F1을 계산한다.
+    """타깃 정의 후보(max/mean_ge_0.5/min/exclude_conflict) 각각에 대해 GroupKFold(X-키) 5-fold
+    로지스틱(class_weight='balanced') F1을 계산한다.
 
     모델 비교가 목적이 아니라 타깃 정의 선택을 위한 소형 진단 실험이다.
     """

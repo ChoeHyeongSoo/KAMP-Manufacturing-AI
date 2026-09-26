@@ -70,20 +70,21 @@ def block_stats(X: pd.DataFrame, n_blocks: int = 5) -> pd.DataFrame:
     return pd.DataFrame(rows).set_index("var").sort_values("max_psi", ascending=False)
 
 
-def auc_by_split(X: pd.DataFrame, y: pd.Series, var: str, time_test_idx, n_splits: int = 5,
-                  random_state: int = 0) -> dict:
-    """단일 변수의 랜덤 5-fold AUC(평균) vs 시간 블록(test=time_test_idx) AUC 비교."""
-    from sklearn.model_selection import StratifiedKFold
+def auc_by_split(X: pd.DataFrame, y: pd.Series, var: str, time_test_idx) -> dict:
+    """단일 변수의 전체(구간 무관) AUC와 시간 블록(test=time_test_idx) 내부 AUC를 비교한다.
+
+    var는 학습되는 모델이 아니라 원값 그대로를 랭킹 삼아 y와 비교하는 단변량 지표이므로, 랜덤 fold로 나눠 평균을
+    내도 "학습·검증"의 의미가 없다(fold마다 사실상 같은 전체 AUC가 반복될 뿐이다). 그래서 여기서는 랜덤 fold 평균
+    대신 파일 전체 AUC(auc_full) 하나만 계산하고, 이를 "불량 밀집 구간 내부"에서만 다시 계산한 AUC(auc_time_block)와
+    비교한다. 둘의 차이는 실제 판별력 차이가 아니라 **시기 교란**(그 구간이 시간적으로 다른 분포·라벨 밀도를 가져
+    전체 순위와 다르게 보이는 착시)의 크기를 보여준다.
+    """
     from sklearn.metrics import roc_auc_score
 
-    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
-    rand_aucs = []
-    for _, te in skf.split(X, y):
-        yt = y.iloc[te]
-        if yt.nunique() < 2:
-            continue
-        a = roc_auc_score(yt, X[var].iloc[te])
-        rand_aucs.append(max(a, 1 - a))
+    auc_full = np.nan
+    if y.nunique() == 2:
+        a = roc_auc_score(y, X[var])
+        auc_full = max(a, 1 - a)
 
     time_mask = X.index.isin(time_test_idx)
     yt = y[time_mask]
@@ -92,9 +93,8 @@ def auc_by_split(X: pd.DataFrame, y: pd.Series, var: str, time_test_idx, n_split
         a = roc_auc_score(yt, X.loc[time_mask, var])
         auc_time = max(a, 1 - a)
 
-    return {"var": var, "auc_random_mean": float(np.mean(rand_aucs)) if rand_aucs else np.nan,
-            "auc_random_std": float(np.std(rand_aucs)) if rand_aucs else np.nan,
-            "auc_time_block": auc_time, "n_time_test": int(time_mask.sum()), "n_time_test_pos": int(yt.sum())}
+    return {"var": var, "auc_full": auc_full, "auc_time_block": auc_time,
+            "n_time_test": int(time_mask.sum()), "n_time_test_pos": int(yt.sum())}
 
 
 def simultaneous_extreme_rows(X: pd.DataFrame, cols: list[str], z: float = 3.0, k: int | None = None) -> pd.DataFrame:
