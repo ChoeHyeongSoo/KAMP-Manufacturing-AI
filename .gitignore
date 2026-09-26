@@ -1,26 +1,51 @@
-# 원본 데이터 (용량·저작권) — data/README.md 참고
-data/*.zip
-data/*/
+# ── 데이터 (용량·저작권) — data/README.md만 추적 ──
+data/*
+!data/README.md
 
-# Python
-__pycache__/
-*.pyc
-.venv/
-venv/
-.ipynb_checkpoints/
-
-# 모델 산출물 (필요 시 Git LFS 또는 릴리즈로 공유)
+# ── 모델 가중치 (공유가 필요하면 릴리즈·드라이브로) ──
 models/
 *.pkl
 *.joblib
 *.h5
 *.pt
+*.pth
+*.ckpt
+*.onnx
 
-# OS / IDE
+# ── 개인 실험 노트북 (팀 공유 X) ──
+notebooks/scratch/
+
+# ── 템플릿 실행 시 생기는 출력 ──
+figures/_template/
+results/_template/
+
+# ── Python / Jupyter ──
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+.pytest_cache/
+*.egg-info/
+
+# ── 실험 로그 ──
+*.log
+mlruns/
+lightning_logs/
+catboost_info/
+wandb/
+
+# ── 환경 변수·비밀값 ──
+.env
+.env.*
+
+# ── OS / IDE ──
 .DS_Store
 Thumbs.db
+desktop.ini
 .vscode/
 .idea/
 
-# 에이전트 로컬 작업 영역 (개인 작업일지·설정 — 팀 공유 규칙은 루트 CLAUDE.md 참고)
+# ── 에이전트 로컬 작업 영역 (개인 작업일지·설정 — 팀 공유 규칙은 루트 CLAUDE.md 참고) ──
 .claude/

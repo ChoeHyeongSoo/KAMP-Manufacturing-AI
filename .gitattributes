@@ -1,0 +1,8 @@
+# 줄바꿈 통일 (Windows·macOS 혼용 대비)
+* text=auto eol=lf
+*.bat text eol=crlf
+# 바이너리
+*.png binary
+*.jpg binary
+*.zip binary
+*.pkl binary
