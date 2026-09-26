@@ -9,6 +9,7 @@
 | `reports/01_data_quality.md` | 진단 요약 리포트 — 이슈 Top 5, 필요 처리 표, 총평 |
 | `src/data_quality.py` | 로딩·품질 체크 함수 (`load_all`, `duplicate_report`, `idle_block_mask` 등) |
 | `figures/` | 리포트 그림 6장 |
+| `notebooks/02_diagnosis_deep.ipynb`, `reports/02_diagnosis_deep.md`, `src/pairs.py`/`drift.py`/`outliers.py` | 추가 진단 — 쌍 구조·타깃 정의·비가동 정밀 정의·시간 누수 정량화·cn7/rg3 결합 가능성·이상치 규칙 |
 
 ## 핵심 진단 (요약)
 - 값이 파일별로 이미 z-score 표준화됨, 시간·설비 컬럼 없음
