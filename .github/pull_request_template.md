@@ -1,4 +1,4 @@
-<!-- 제목: <type>(<scope>): <명사형 설명> / 소속·이름·AI 도구 표시 금지 -->
+<!-- 제목: [Data|Model|Analysis|Docs|Chore] <명사형 설명> / 병합은 merge commit / 소속·이름·AI 도구 표시 금지 -->
 
 ## 작업 단계
 - [ ] 데이터 이해·진단
