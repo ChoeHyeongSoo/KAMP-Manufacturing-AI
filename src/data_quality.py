@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-RAW_DIR = ROOT / "data_raw"
+RAW_DIR = ROOT / "data" / "raw"
 FIG_DIR = ROOT / "figures"
 
 FILES = {"normal": "press_data_normal.csv", "outlier": "outlier_data.csv"}
@@ -28,7 +28,19 @@ def detect_encoding(path: Path, n_bytes: int = 4096) -> str:
         return "cp949"
 
 
+def _ensure_raw_files() -> None:
+    """data/raw/에 필요한 원본 CSV가 없으면 zip에서 자동 추출한다.
+
+    순환 임포트를 피하려고 extract 모듈은 실제로 필요할 때(파일이 없을 때)만 함수 내부에서 import한다.
+    """
+    missing = [name for name in FILES.values() if not (RAW_DIR / name).exists()]
+    if missing:
+        from extract import extract
+        extract()
+
+
 def file_inventory() -> pd.DataFrame:
+    _ensure_raw_files()
     rows = []
     for key, name in FILES.items():
         p = RAW_DIR / name
@@ -39,6 +51,7 @@ def file_inventory() -> pd.DataFrame:
 
 def load(key: str) -> pd.DataFrame:
     """첫 컬럼(이름 없음)은 원본 행 인덱스. TimeStamp를 datetime으로 파싱하고 세그먼트 id를 붙인다."""
+    _ensure_raw_files()
     p = RAW_DIR / FILES[key]
     d = pd.read_csv(p, index_col=0, encoding=detect_encoding(p))
     d["ts"] = pd.to_datetime(d["TimeStamp"])
