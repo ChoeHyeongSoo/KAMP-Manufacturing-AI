@@ -19,6 +19,9 @@ notebooks/scratch/
 figures/_template/
 results/_template/
 
+# ── 데이터 전처리 중간 산출물 ──
+topics/*/data_raw/
+
 # ── Python / Jupyter ──
 __pycache__/
 *.py[cod]
