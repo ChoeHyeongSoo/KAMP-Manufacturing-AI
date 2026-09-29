@@ -21,3 +21,4 @@ data/
 | 파일 | 생성 (노트북 / 함수) | 내용 |
 |---|---|---|
 | `segments.csv` | `02_diagnosis_deep` / `segments.build_segments_table()` | 세그먼트 620행(정상 599 + 이상 21) × 26열, `seg_uid`·`vib_grade`·`cur_grade`·`state` |
+| `11_window_features.parquet` | `11_window_features_CHS` / `features.window_features()` + `split` 열 부여 | 윈도우 단위 피처 7,115행(1·2·3초 = 3,360 / 2,317 / 1,438) × 44열: 메타(`seg_uid`·`src`·`label`·`win_s`·`t_start`·`t_abs`·`n_samples`), 피처 32(진폭 18·형상 9·사인 잔차 3·채널 관계 2), `fold`·`block`, `state`·`vib_grade`·`cur_grade`. 입력 가능 열은 `features.feature_columns()`, 컬럼 계약은 `docs/modeling_kickoff.md` §2 |
