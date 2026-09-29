@@ -1,0 +1,7 @@
+win_s,src,n_seg,n_seg_valid,n_seg_undetermined,undetermined_ratio,n_windows
+1.0,normal,599,530,69,0.1152,3264
+1.0,outlier,21,17,4,0.1905,96
+2.0,normal,599,452,147,0.2454,2254
+2.0,outlier,21,13,8,0.381,63
+3.0,normal,599,360,239,0.399,1400
+3.0,outlier,21,10,11,0.5238,38
