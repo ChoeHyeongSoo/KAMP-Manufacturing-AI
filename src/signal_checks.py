@@ -279,3 +279,32 @@ def value_step_table(dfs: dict[str, pd.DataFrame], channels: tuple[str, ...] = t
                          "float32_roundtrip_maxerr": float(np.abs(x.astype(np.float32).astype(float) - x).max()),
                          "vmin": float(x.min()), "vmax": float(x.max())})
     return pd.DataFrame(rows)
+
+
+# --- 누수 차단 실험: 피처군별 교차검증 AUC (03 A-3) ---------------------------
+
+def cv_auc_logistic(X: pd.DataFrame, y: pd.Series, fold: pd.Series, C: float = 1.0) -> dict:
+    """표준화 + 로지스틱 회귀를 fold별로 학습해 out-of-fold 예측의 AUC(pooled)와 fold 평균 AUC를 돌려준다.
+
+    X·y·fold는 같은 index(세그먼트). 상수 컬럼은 자동 제거. 피처가 하나도 남지 않으면 AUC 0.5.
+    """
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    X = X.loc[:, X.std(numeric_only=True) > 0].fillna(0)
+    if X.shape[1] == 0:
+        return {"auc_oof": 0.5, "auc_fold_mean": 0.5, "n_features": 0}
+    y = y.reindex(X.index)
+    fold = fold.reindex(X.index)
+    oof = pd.Series(np.nan, index=X.index)
+    fold_aucs = []
+    for k in sorted(fold.unique()):
+        tr, te = (fold != k).to_numpy(), (fold == k).to_numpy()
+        clf = make_pipeline(StandardScaler(), LogisticRegression(C=C, max_iter=2000, class_weight="balanced"))
+        clf.fit(X.iloc[tr], y.iloc[tr])
+        oof.iloc[te] = clf.predict_proba(X.iloc[te])[:, 1]
+        if y.iloc[te].nunique() == 2:
+            fold_aucs.append(roc_auc_score(y.iloc[te], oof.iloc[te]))
+    return {"auc_oof": float(roc_auc_score(y, oof)), "auc_fold_mean": float(np.mean(fold_aucs)) if fold_aucs else np.nan,
+            "n_features": int(X.shape[1])}

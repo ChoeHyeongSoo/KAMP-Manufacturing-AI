@@ -45,14 +45,19 @@ def quantize_to_step(x: np.ndarray | pd.Series, step: float = CUR_STEP) -> np.nd
     return np.round(np.asarray(x, dtype=float) / step) * step
 
 
+CUR_DECIMALS = 1          # 격자 양자화 뒤 추가 반올림 자릿수 — 03 A-3: float 표기 자릿수 잔여 누수(AUC 0.657→0.581) 차단
+
+
 def unify_format(df: pd.DataFrame, vib_decimals: int = VIB_DECIMALS,
-                 cur_step: float | None = CUR_STEP, cur_decimals: int | None = None) -> pd.DataFrame:
+                 cur_step: float | None = CUR_STEP, cur_decimals: int | None = CUR_DECIMALS) -> pd.DataFrame:
     """두 파일의 값 표기 형식을 같게 맞춘다.
 
     - 진동(AI0/AI1): 소수 `vib_decimals` 자리로 반올림 (정상 파일 형식 기준. 8자리 값을 6자리로 낮춤).
     - 전류(AI2): `cur_step` 격자로 양자화. 정상 파일 값은 격자 위에 있지 않으므로(0.19%) 정상 쪽을
       이상 쪽 격자에 맞추는 것이며, 격자 간격(1.19)은 전류 RMS 80~150 대비 1% 미만이라 신호 손실은 없다.
-      `cur_step=None`이면 건너뛴다. `cur_decimals`를 주면 양자화 뒤 추가로 반올림한다(부동소수 잔차 정리).
+      `cur_step=None`이면 건너뛴다. 양자화 뒤 `cur_decimals` 자리로 다시 반올림한다 — k×1.19209 형태의
+      float 표기는 소수 자릿수가 값 크기에 따라 달라져 형식 피처(자릿수)로 파일이 일부 구분되기 때문
+      (03 A-3: 전류 형식 피처 AUC 0.657 → 1자리 반올림 후 0.581, 최대 값 변화 0.06). `None`이면 건너뛴다.
 
     반환은 복사본. 원본 컬럼을 덮어쓰며 새 컬럼은 만들지 않는다.
     """
