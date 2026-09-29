@@ -1,0 +1,2 @@
+win_2means_boundary,center_low,center_high,n_windows,agree_with_segment_kmeans_state,"agree_with_seg_threshold_clear(<95,>140)",n_clear_windows,mid95_140_windows,mid95_140_share_high
+125.20539040592206,90.19784091914215,160.21293989270197,3264,0.9442401960784313,0.995323460639127,2566,698,0.3237822349570201
