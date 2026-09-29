@@ -171,3 +171,59 @@ def autocorr(x: np.ndarray, max_lag: int = 20) -> np.ndarray:
     ac = np.correlate(xc, xc, mode="full")[len(xc) - 1:]
     ac = ac[: max_lag + 1]
     return ac / ac[0] if ac[0] != 0 else ac
+
+
+# --- 사인 피팅: DC 오프셋이 에일리어싱 산물인지 (03 A-1) --------------------
+
+def sine_fit_segment(x: np.ndarray, fs: float = 10.0, f_min: float = 0.01, f_max: float | None = None,
+                     n_grid: int = 500, refine: bool = True) -> dict:
+    """세그먼트 하나에 `A·sin(2πft+φ) + C`를 최소제곱으로 맞춘다.
+
+    f는 [f_min, f_max](기본 f_max = fs/2) 로그 격자 n_grid점에서 탐색한 뒤 최적점 주변을 정밀화한다.
+    각 f에서 A·sin+B·cos+C는 선형이므로 lstsq로 닫힌 해를 구한다.
+    반환: f_hz, amp, phase, offset(C), dc_mean(단순 평균), resid_rms, r2, n.
+    - 60 Hz 구동이 정확히 10 Hz의 정수배면 0 Hz로 접혀 "DC"가 되고, 조금 벗어나면 f→0.1 Hz 이하의
+      느린 정현파가 돼 5 s burst 안에서 DC처럼 보인다. 그 경우 f가 작을수록 |dc_mean|이 커진다(A-1 가설).
+    """
+    x = np.asarray(x, dtype=float)
+    n = len(x)
+    t = np.arange(n) / fs
+    f_max = fs / 2 if f_max is None else f_max
+    dc_mean = float(x.mean())
+    if n < 4:
+        return {"f_hz": np.nan, "amp": np.nan, "phase": np.nan, "offset": dc_mean, "dc_mean": dc_mean,
+                "resid_rms": np.nan, "r2": np.nan, "n": n}
+
+    def _solve(f: float) -> tuple[float, np.ndarray]:
+        M = np.column_stack([np.sin(2 * np.pi * f * t), np.cos(2 * np.pi * f * t), np.ones(n)])
+        coef, *_ = np.linalg.lstsq(M, x, rcond=None)
+        resid = x - M @ coef
+        return float(resid @ resid), coef
+
+    grid = np.geomspace(f_min, f_max, n_grid)
+    sse = np.array([_solve(f)[0] for f in grid])
+    i = int(np.argmin(sse))
+    f_best = float(grid[i])
+    if refine:
+        lo, hi = grid[max(i - 1, 0)], grid[min(i + 1, n_grid - 1)]
+        fine = np.linspace(lo, hi, 101)
+        sse_f = np.array([_solve(f)[0] for f in fine])
+        f_best = float(fine[int(np.argmin(sse_f))])
+    sse_best, (a, b, c) = _solve(f_best)
+    sst = float(((x - dc_mean) ** 2).sum())
+    return {"f_hz": f_best, "amp": float(np.hypot(a, b)), "phase": float(np.arctan2(b, a)),
+            "offset": float(c), "dc_mean": dc_mean, "resid_rms": float(np.sqrt(sse_best / n)),
+            "r2": float(1 - sse_best / sst) if sst > 0 else np.nan, "n": n}
+
+
+def sine_fit_table(d: pd.DataFrame, channels: tuple[str, ...] = tuple(SENSORS), by: str = "seg_uid",
+                   fs: float = 10.0, **kw) -> pd.DataFrame:
+    """세그먼트(`by`)×채널별 `sine_fit_segment` 결과 표. 컬럼: by, channel, f_hz, amp, phase, offset, dc_mean, resid_rms, r2, n."""
+    rows = []
+    for key, g in d.groupby(by, sort=False):
+        for ch in channels:
+            r = sine_fit_segment(g[ch].to_numpy(), fs=fs, **kw)
+            r.update({by: key, "channel": ch})
+            rows.append(r)
+    cols = [by, "channel", "f_hz", "amp", "phase", "offset", "dc_mean", "resid_rms", "r2", "n"]
+    return pd.DataFrame(rows)[cols]
