@@ -1,0 +1,10 @@
+﻿channel,subset,n,spearman_rho,p_value,share_f_below_0.1Hz
+AI0_Vibration,normal,522,-0.092,0.03500459912981035,0.0
+AI0_Vibration,outlier,16,-0.218,0.41808684161130316,0.0
+AI0_Vibration,pooled,538,-0.153,0.00038511858187034964,0.0
+AI1_Vibration,normal,529,-0.093,0.03263561399391456,0.0
+AI1_Vibration,outlier,13,-0.022,0.9431862416608071,0.0
+AI1_Vibration,pooled,542,-0.145,0.0007035272726462951,0.0
+AI2_Current,normal,528,-0.043,0.32264915756002954,0.0
+AI2_Current,outlier,11,0.2,0.5554454421055853,0.0
+AI2_Current,pooled,539,-0.036,0.39912568205652554,0.0

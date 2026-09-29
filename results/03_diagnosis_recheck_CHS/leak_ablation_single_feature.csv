@@ -1,0 +1,14 @@
+﻿,auc_before,auc_after
+AI0_Vibration_ndec_mode,1.0,0.525
+AI0_Vibration_ndec_mean,1.0,0.54
+AI0_Vibration_dc_abs,0.944,0.5
+AI0_Vibration_uniq_ratio,0.517,0.517
+AI1_Vibration_ndec_mode,1.0,0.56
+AI1_Vibration_ndec_mean,1.0,0.522
+AI1_Vibration_dc_abs,0.92,0.5
+AI1_Vibration_uniq_ratio,0.52,0.52
+AI2_Current_ndec_mode,0.539,0.527
+AI2_Current_ndec_mean,0.783,0.56
+AI2_Current_dc_abs,0.891,0.5
+AI2_Current_uniq_ratio,0.832,0.517
+AI2_Current_step_share,1.0,0.52
