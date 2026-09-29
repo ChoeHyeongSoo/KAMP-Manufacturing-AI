@@ -10,3 +10,7 @@ nbformat==5.11.1
 nbconvert==7.17.1
 ipykernel==7.3.0
 pyarrow==25.0.1
+# 모델 비교(2x)용 — 2026-09-29 검증. torch는 CPU 빌드로 충분(pip install torch --index-url https://download.pytorch.org/whl/cpu)
+torch==2.14.0
+pyod==3.6.6
+tqdm==4.70.1
