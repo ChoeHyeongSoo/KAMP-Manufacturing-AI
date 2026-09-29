@@ -36,23 +36,27 @@ def fpr_segment(score_normal, seg_uid_normal, thr: float) -> float:
     return float((t["s"] > thr).groupby(t["u"]).any().mean())
 
 
-def detection_delay_s(score_outlier, seg_uid_outlier, t_start, thr: float, burst_gap_s: float = BURST_GAP_S,
-                      include_gap: bool = False, delay_offset_s: float = 0.0) -> pd.DataFrame:
+def detection_delay_s(score_outlier, seg_uid_outlier, t_start, thr: float, win_s: float = 0.0,
+                      fs: float = 10.0, burst_gap_s: float = BURST_GAP_S,
+                      include_gap: bool = False) -> pd.DataFrame:
     """이상 세그먼트별 첫 초과 윈도우까지의 지연.
 
-    반환 컬럼: seg_uid, detected, delay_in_window_s(= 첫 초과 t_start + delay_offset_s), delay_s.
-    delay_offset_s는 "윈도우가 완성된 시점" 보정(02의 이동 RMS 지연은 마지막 샘플 기준이라 1초 윈도우면 0.9).
-    include_gap=True면 delay_s = 윈도우 내 지연 + burst_gap_s(체감 지연), 아니면 delay_s = 윈도우 내 지연.
+    반환 컬럼: seg_uid, detected, delay_in_window_s, delay_s.
+    - delay_in_window_s = 첫 초과 윈도우의 **마지막 샘플 시각** = t_start + win_s − 1/fs. 윈도우가 채워져야
+      판정이 나오므로 시작 시각이 아니라 완성 시각을 지연으로 센다(02 §8의 이동 RMS 지연과 같은 정의:
+      1초 윈도우가 세그먼트 첫 샘플부터 초과하면 0.9초). win_s=0이면 t_start 그대로.
+    - include_gap=True면 delay_s = delay_in_window_s + burst_gap_s(체감 지연), 아니면 delay_in_window_s.
     미탐지 세그먼트는 detected=False, 지연 nan. 중앙값은 탐지된 세그먼트만으로 구한다.
     """
     t = pd.DataFrame({"s": np.asarray(score_outlier, dtype=float), "u": np.asarray(seg_uid_outlier),
                       "t": np.asarray(t_start, dtype=float)})
+    offset = max(win_s - 1.0 / fs, 0.0) if win_s > 0 else 0.0
     rows = []
     for uid, g in t.groupby("u", sort=False):
         g = g.sort_values("t")
         hit = g[g["s"] > thr]
         if len(hit):
-            d_in = float(hit["t"].iloc[0]) + delay_offset_s
+            d_in = float(hit["t"].iloc[0]) + offset
             rows.append({"seg_uid": uid, "detected": True, "delay_in_window_s": d_in,
                          "delay_s": d_in + (burst_gap_s if include_gap else 0.0)})
         else:

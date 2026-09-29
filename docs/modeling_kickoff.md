@@ -14,9 +14,10 @@
 
 | 컬럼 | 의미 | 입력 가능 |
 |---|---|---|
-| `AI0_Vibration_*`, `AI1_Vibration_*`, `AI2_Current_*` `{rms, peak, kurt, crest, skew}` | 진폭 피처군(15열) | 가능 (기본) |
+| `AI0_Vibration_*`, `AI1_Vibration_*`, `AI2_Current_*` `{rms, peak, p2p, kurt, crest, skew}` | 진폭 피처군(18열) | 가능 (기본) |
 | `<채널>_shape_{kurt, crest, skew}` | 형상 피처군: 윈도우 내 z-score 후 값(9열). 진동 게인 동일성 미확인(03 A-2) 대비 | 가능 (ablation +형상) |
 | `cur_fit_resid_rms`, `cur_fit_r2`, `cur_fit_f_dev` | 전류 사인 피팅 잔차 RMS · R² · \|f−0.6\|(3열). **세그먼트 전체 1회 피팅을 윈도우에 브로드캐스트한 세그먼트 수준 값** | 가능 (ablation +사인, 날짜 교란 가능성 주의) |
+| `vib_corr01`, `cur_ac1` | 채널 관계(2열): 세그먼트 내 AI0·AI1 피어슨 상관, 전류 lag-1 자기상관. **세그먼트 수준 값 브로드캐스트**. reference EDA 지표(정상 +0.28 → 이상 −0.35, 0.93 → 0.44)와의 비교용이며 `cur_ac1`은 사인 잔차와 정보가 겹친다 | 가능 (ablation +관계) |
 | `seg_uid` | 세그먼트 키(그룹) | 금지 (분할·집계 키로만) |
 | `src` | 정상/이상 파일 | 금지 (날짜 = 라벨) |
 | `label` | 정답(0 정상, 1 이상) | 금지 (정답) |
@@ -25,7 +26,7 @@
 | `fold`, `block` | 분할 번호(§4). `block`은 정상만, 이상은 NA | 금지 |
 | `state`, `vib_grade`, `cur_grade` | 운전 상태(정상만) · 채널별 soft label(이상만) | 금지 (사후 해석·FN/FP 분석용) |
 
-입력 열 목록은 `features.feature_columns(df)`로 얻는다(27열). 판정 불가 세그먼트(길이 < 윈도우)는 윈도우가 없어 평가에서 빠진다: 이상 세그먼트 기준 1초 4/21(19.05%), 2초 8/21(38.10%), 3초 11/21(52.38%), 정상은 각각 11.52% / 24.54% / 39.90%. 성능 보고 시 이 비율을 함께 적는다.
+입력 열 목록은 `features.feature_columns(df)`로 얻는다(32열). 판정 불가 세그먼트(길이 < 윈도우)는 윈도우가 없어 평가에서 빠진다: 이상 세그먼트 기준 1초 4/21(19.05%), 2초 8/21(38.10%), 3초 11/21(52.38%), 정상은 각각 11.52% / 24.54% / 39.90%. 성능 보고 시 이 비율을 함께 적는다.
 
 ## 3. 표준 전처리와 금지 목록
 
@@ -44,7 +45,7 @@
 - `evaluate.to_metrics_row(model, split, fold, auc, fpr_sample, fpr_segment, delay_median_s)`가 `results/README.md` 공통 컬럼(`model, split, fold, auc, fpr_sample, fpr_segment, delay_median_s`)을 만든다. 전체 평균 행은 `fold="mean"`.
 - 임계값은 **train fold 정상 점수의 q99**(`evaluate.threshold_from_normal`)만 쓴다. 이상 데이터로 임계를 고르지 않는다.
 - `fpr_sample`은 정상 윈도우 초과 비율, `fpr_segment`는 초과 윈도우가 1개라도 있는 정상 세그먼트 비율. 둘 다 보고한다.
-- 탐지 지연 `evaluate.detection_delay_s`: 세그먼트별 첫 초과 윈도우. 체감 지연 = 윈도우 내 지연 + burst 간격 중앙값 7.958초(`include_gap=True`). 실제 이상 발생 시점은 알 수 없으므로 7.958초는 구조적 하한이다. `delay_median_s`는 탐지된 세그먼트만의 중앙값이며, 미탐지 수(`n_detected / n_out_seg`)를 함께 적는다.
+- 탐지 지연 `evaluate.detection_delay_s(..., win_s=윈도우 길이)`: 세그먼트별 첫 초과 윈도우의 **완성 시각**(t_start + win_s − 0.1 s, 02 §8 정의와 동일). 체감 지연 = 윈도우 내 지연 + burst 간격 중앙값 7.958초(`include_gap=True`). 실제 이상 발생 시점은 알 수 없으므로 7.958초는 구조적 하한이다. `delay_median_s`는 탐지된 세그먼트만의 중앙값이며, 미탐지 수(`n_detected / n_out_seg`)를 함께 적는다.
 - 현장 활용(4번)용 연속 규칙: `evaluate.kofn_alarm(exceed, k, n)`.
 - 참고 기준(규칙 베이스라인 smoke, 1초 AI0 rms, `results/11_window_features_CHS/metrics_smoke.csv`): group_kfold_seg 평균 AUC 0.7864 · fpr_sample 0.0109 · fpr_segment 0.0395 · delay 0.95초, time_block 평균 AUC 0.7786 · fpr_sample 0.0116 · fpr_segment 0.0384 · delay 0.90초. 모델은 이 값을 넘어야 의미가 있다.
 
@@ -55,7 +56,7 @@
 
 ## 7. 피처군 ablation 규칙
 
-- 기본 = 진폭 15열. 추가 = +형상, +사인 잔차.
+- 기본 = 진폭 18열. 추가 = +형상, +사인 잔차, +관계(`vib_corr01`·`cur_ac1`). reference식 비교로 "+전류 DC(세그먼트 평균, 형식 누수 의심 채널)"를 별도 행으로 넣어도 되나 표준 입력에는 포함하지 않는다.
 - **최소 보고**: 기본, 기본+사인 두 행. 사인 잔차는 윈도우 단독 AUC가 1.0000(11 셀 5)이지만 세그먼트 수준 값이라 날짜 교란 가능성이 있으므로 기본 성능과 분리해 해석한다.
 - 지도 상한 참고: 세그먼트 로지스틱 OOF AUC 진폭 0.997, 진폭+사인 0.9999(03 `leak_ablation.csv`).
 
