@@ -1,0 +1,6 @@
+﻿group,n_seg,AI0_Vibration_nf,AI0_Vibration_ac_rms,AI0_Vibration_lsb,AI1_Vibration_nf,AI1_Vibration_ac_rms,AI1_Vibration_lsb
+normal_state0(고부하),226.0,0.07486,0.08259,0.00015,0.14123,0.16909,0.00027
+normal_state1(저부하),304.0,0.0614,0.05178,0.0001,0.06002,0.0523,0.00013
+outlier_other,14.0,0.07105,0.38105,0.00029,0.04413,0.23676,0.00023
+outlier_quiet(3·19·20),3.0,0.02362,0.02627,0.00105,0.02005,0.06412,0.00021
+ratio quiet/normal_state1,,0.385,,,0.334,,

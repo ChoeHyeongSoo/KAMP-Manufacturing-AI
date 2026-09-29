@@ -1,0 +1,3 @@
+﻿channel,n_normal_state1,n_outlier_quiet,sd_normal,sd_outlier,ks_D,p_value
+AI0_Vibration,11146,56,0.0569,0.0265,0.2169,0.008576330227739737
+AI1_Vibration,11146,56,0.061,0.056,0.1625,0.09247876665978216

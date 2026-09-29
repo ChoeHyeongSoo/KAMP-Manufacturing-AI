@@ -227,3 +227,55 @@ def sine_fit_table(d: pd.DataFrame, channels: tuple[str, ...] = tuple(SENSORS), 
             rows.append(r)
     cols = [by, "channel", "f_hz", "amp", "phase", "offset", "dc_mean", "resid_rms", "r2", "n"]
     return pd.DataFrame(rows)[cols]
+
+
+# --- 잡음 바닥·값 해상도: 두 파일의 진동 스케일이 같은가 (03 A-2) ------------
+
+def noise_floor(x: np.ndarray) -> float:
+    """1차 차분의 MAD 기반 잡음 표준편차 추정: 1.4826·MAD(Δx)/√2.
+
+    느린 신호 성분보다 샘플 간 백색 잡음(계측 노이즈)에 민감한 강건 추정치. 단 10 Hz 샘플링에서는
+    진동 자체가 광대역으로 접혀 들어오므로 "잡음"과 "신호"가 분리되지 않을 수 있다 — 결과 해석 시
+    RMS와의 상관을 같이 본다.
+    """
+    d = np.diff(np.asarray(x, dtype=float))
+    if len(d) < 2:
+        return np.nan
+    return float(1.4826 * np.median(np.abs(d - np.median(d))) / np.sqrt(2))
+
+
+def noise_floor_table(d: pd.DataFrame, channels: tuple[str, ...] = ("AI0_Vibration", "AI1_Vibration"),
+                      by: str = "seg_uid", decimals: int | None = 6, min_len: int = 10) -> pd.DataFrame:
+    """세그먼트별 잡음 바닥·AC RMS·최소 값 간격(LSB). decimals로 두 파일 자릿수를 맞춘 뒤 계산한다."""
+    rows = []
+    for key, g in d.groupby(by, sort=False):
+        if len(g) < min_len:
+            continue
+        row = {by: key, "n": len(g)}
+        for ch in channels:
+            x = g[ch].to_numpy(dtype=float)
+            if decimals is not None:
+                x = np.round(x, decimals)
+            u = np.unique(x)
+            row[f"{ch}_nf"] = noise_floor(x)
+            row[f"{ch}_ac_rms"] = float(np.sqrt(np.mean((x - x.mean()) ** 2)))
+            row[f"{ch}_lsb"] = float(np.min(np.diff(u))) if len(u) > 1 else np.nan
+        rows.append(row)
+    return pd.DataFrame(rows).set_index(by)
+
+
+def value_step_table(dfs: dict[str, pd.DataFrame], channels: tuple[str, ...] = tuple(SENSORS)) -> pd.DataFrame:
+    """파일×채널별 고유값 수, 최소/1% 값 간격, float32 왕복 오차, 값 범위 — 저장 경로(ADC 코드×스케일 등) 추정용."""
+    rows = []
+    for key, d in dfs.items():
+        for ch in channels:
+            x = d[ch].to_numpy(dtype=float)
+            u = np.unique(x)
+            steps = np.diff(u)
+            steps = steps[steps > 1e-12]
+            rows.append({"src": key, "channel": ch, "n": len(x), "n_unique": len(u),
+                         "min_step": float(steps.min()) if len(steps) else np.nan,
+                         "p1_step": float(np.percentile(steps, 1)) if len(steps) else np.nan,
+                         "float32_roundtrip_maxerr": float(np.abs(x.astype(np.float32).astype(float) - x).max()),
+                         "vmin": float(x.min()), "vmax": float(x.max())})
+    return pd.DataFrame(rows)
