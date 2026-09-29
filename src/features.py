@@ -14,6 +14,9 @@
          reference EDA가 강조한 지표(정상 +0.28 → 이상 −0.35, 자기상관 0.93 → 0.44)와 비교하기 위한 것으로,
          sine과 같이 세그먼트 단위로 계산해 브로드캐스트한다. 0.6 Hz 정현파의 lag-1 자기상관은 cos(2π·0.06)≈0.93이라
          `cur_ac1`은 사인 잔차와 정보가 겹친다.
+         단 `vib_rms_ratio`(AI0 rms / AI1 rms)는 다른 rel 피처와 달리 세그먼트 브로드캐스트가 아니라 **윈도우 단위**로
+         계산한다(AI1 rms가 0이면 nan). 근거: 정상은 하부(AI1)가 더 크고 이상은 상부(AI0)가 역전되는 방향 정보이며
+         세그먼트 단독 AUC 0.776 (파인블랭킹 문서 §5).
 
 `t_abs`(윈도우 시작의 절대 시각)는 시간 블록 분할·정렬용이다. 날짜가 곧 라벨이므로 **모델 입력 금지**.
 """
@@ -36,7 +39,7 @@ GROUPS = ("amp", "shape", "sine", "rel")
 AMP_KEYS = ("rms", "peak", "p2p", "kurt", "crest", "skew")
 SHAPE_KEYS = ("kurt", "crest", "skew")
 SINE_KEYS = ("cur_fit_resid_rms", "cur_fit_r2", "cur_fit_f_dev")
-REL_KEYS = ("vib_corr01", "cur_ac1")
+REL_KEYS = ("vib_corr01", "cur_ac1", "vib_rms_ratio")
 
 META_COLS = {"seg_uid", "src", "label", "win_s", "t_start", "t_abs", "n_samples", "fold", "block",
              "state", "vib_grade", "cur_grade"}
@@ -96,9 +99,12 @@ def current_sine_features(x: np.ndarray, fs: float = FS) -> dict:
 
 
 def relation_features(seg: pd.DataFrame) -> dict:
-    """채널 관계 피처(세그먼트 단위): vib_corr01 = AI0·AI1 피어슨 상관, cur_ac1 = 전류 lag-1 자기상관. 길이 < 4면 nan."""
+    """채널 관계 피처(세그먼트 단위): vib_corr01 = AI0·AI1 피어슨 상관, cur_ac1 = 전류 lag-1 자기상관. 길이 < 4면 nan.
+
+    윈도우 단위인 `vib_rms_ratio`는 여기 포함하지 않고 `window_features`에서 계산한다.
+    """
     if len(seg) < 4:
-        return {k: np.nan for k in REL_KEYS}
+        return {k: np.nan for k in REL_KEYS if k != "vib_rms_ratio"}
     a, b = seg[SENSORS[0]].to_numpy(dtype=float), seg[SENSORS[1]].to_numpy(dtype=float)
     corr = float(np.corrcoef(a, b)[0, 1]) if a.std() > 0 and b.std() > 0 else np.nan
     ac = sc.autocorr(seg[CUR_CHANNEL].to_numpy(dtype=float), max_lag=1)
@@ -116,7 +122,7 @@ def window_features(df_pre: pd.DataFrame, windows_s=WINDOWS_S, step_s: float = S
     """전처리된 샘플 표 → 윈도우 1행짜리 wide 피처 표.
 
     출력 컬럼: seg_uid, src, label, win_s, t_start(세그먼트 내 오프셋 s), t_abs(윈도우 시작 ts),
-    n_samples, 이어서 `<채널>_<피처>`(amp 18), `<채널>_shape_<피처>`(shape 9), cur_fit_*(sine 3), vib_corr01·cur_ac1(rel 2).
+    n_samples, 이어서 `<채널>_<피처>`(amp 18), `<채널>_shape_<피처>`(shape 9), cur_fit_*(sine 3), vib_corr01·cur_ac1·vib_rms_ratio(rel 3).
     `t_abs`는 시간 블록 분할용이며 모델 입력이 아니다.
     """
     d = add_seg_uid(df_pre)
@@ -140,6 +146,10 @@ def window_features(df_pre: pd.DataFrame, windows_s=WINDOWS_S, step_s: float = S
                     if "shape" in groups:
                         row.update({f"{ch}_shape_{k}": v for k, v in shape_features(x).items()})
                 row.update(sine)
+                if "rel" in groups:
+                    r0 = row[f"{SENSORS[0]}_rms"] if "amp" in groups else float(np.sqrt(np.mean(arrs[SENSORS[0]][s:s + win] ** 2)))
+                    r1 = row[f"{SENSORS[1]}_rms"] if "amp" in groups else float(np.sqrt(np.mean(arrs[SENSORS[1]][s:s + win] ** 2)))
+                    row["vib_rms_ratio"] = r0 / r1 if r1 > 0 else np.nan
                 rows.append(row)
     return pd.DataFrame(rows)
 
