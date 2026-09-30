@@ -1,0 +1,7 @@
+col_a,col_b,max_abs_diff
+AI0_Vibration_skew,AI0_Vibration_shape_skew,2.3869795029440866e-15
+AI2_Current_skew,AI2_Current_shape_skew,3.7192471324942744e-15
+AI2_Current_kurt,AI2_Current_shape_kurt,3.9968028886505635e-15
+AI1_Vibration_skew,AI1_Vibration_shape_skew,3.9968028886505635e-15
+AI0_Vibration_kurt,AI0_Vibration_shape_kurt,4.440892098500626e-15
+AI1_Vibration_kurt,AI1_Vibration_shape_kurt,5.329070518200751e-15

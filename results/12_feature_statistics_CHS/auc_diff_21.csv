@@ -1,0 +1,2 @@
+pair,diff,ci_low,ci_high,p_two_sided,overlap_zero,n_valid,diff_21_foldmean
+rule3_rms_state_dir - rule1_rms_ai0,0.08959163092320266,0.041974146143913246,0.14340383615782587,0.001,False,1000,0.0831806700673896
