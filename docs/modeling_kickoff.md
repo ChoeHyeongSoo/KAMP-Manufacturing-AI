@@ -24,7 +24,9 @@
 | `win_s`, `n_samples`, `t_start` | 윈도우 길이 · 샘플 수 · 세그먼트 내 시작 오프셋(s) | 금지 (`t_start`는 지연 계산용) |
 | `t_abs` | 윈도우 시작 절대 시각 | **금지** (날짜 = 라벨, 시간 블록 정렬 전용) |
 | `fold`, `block` | 분할 번호(§4). `block`은 정상만, 이상은 NA | 금지 |
-| `state`, `vib_grade`, `cur_grade` | 운전 상태(정상만) · 채널별 soft label(이상만) | 금지 (사후 해석·FN/FP 분석용) |
+| `state`, `vib_grade`, `cur_grade` | 운전 상태(정상만, `state` 0 = 고부하, 1 = 저부하) · 채널별 soft label(이상만) | 금지 (사후 해석·FN/FP 분석용) |
+
+형상 `*_shape_kurt`·`*_shape_skew`는 진폭 `*_kurt`·`*_skew`와 완전 중복(z-score 불변, 12 `duplicate_columns.csv`)이라 실질 입력은 27열이다.
 
 입력 열 목록은 `features.feature_columns(df)`로 얻는다(33열). 판정 불가 세그먼트(길이 < 윈도우)는 윈도우가 없어 평가에서 빠진다: 이상 세그먼트 기준 1초 4/21(19.05%), 2초 8/21(38.10%), 3초 11/21(52.38%), 정상은 각각 11.52% / 24.54% / 39.90%. 성능 보고 시 이 비율을 함께 적는다.
 
@@ -51,8 +53,8 @@
 
 ## 6. soft label과 FP 후보
 
-- FN 해석: 이상 세그먼트 3·19·20은 진동이 정상과 유사(`vib_grade`), 19·20은 `cur_grade`가 확실 이상이지만 그 근거는 **DC 오프셋**이다(21 V2-a: 원시 전류 RMS 207/183 중 DC 비중 91.7%/96.4%, 평균 제거 후 AC RMS 59.6/35.2로 정상 중앙값 100.5 미만). 표준 전처리(평균 제거) 입력에서는 세 세그먼트 모두 진동·전류가 조용하므로 미탐은 라벨 노이즈 가능성을 먼저 본다. 규칙 4종(21) 모두 이 3개를 놓쳤다.
-- FP 해석: 정상 저부하 구간(`state`)에서 오경보가 몰리는지 확인한다. 정상 의심 세그먼트 목록(04 `normal_suspects.csv`)은 있으면 FP 후보로 함께 본다.
+- FN 해석: 이상 세그먼트 3·19·20은 진동이 정상과 유사(`vib_grade`), 19·20은 `cur_grade`가 확실 이상이지만 그 근거는 **DC 오프셋**이다(21 V2-a: 원시 전류 RMS 207/183 중 DC 비중 91.7%/96.4%, 평균 제거 후 AC RMS 59.6/35.2로 정상 중앙값 100.5 미만). 표준 전처리(평균 제거) 입력에서는 세 세그먼트 모두 진동·전류가 조용하다. 규칙 4종(21) 모두 이 3개를 놓쳤다. 31 결과 주력 모델(24·25·26)은 1초 gkf·time_block 모두 3개를 전부 탐지하며, 19를 놓친 모델은 copod_amp·copod_amp_shape·copod_amp_rel·hbos_amp·hbos_amp_shape·deep_svdd 6종뿐이다. 진폭 18열 PCA(9성분)에서 이상 17세그먼트 전부 SPE·T²가 정상 OOF q99를 넘고 조용한 3·19·20도 3.1~4.3배이므로, 미탐은 라벨 노이즈보다 단변량 RMS 규칙의 한계로 해석한다.
+- FP 해석: 31 결과 오경보는 정상 **고부하**(state 0) 상단 꼬리에 몰린다(21모델 중 15개, cnn_deepant 7.52% vs 0.33%). 04 정상 의심 세그먼트와의 겹침이 크다(예측·그래프 계열 44~69%). 정상 의심 세그먼트 목록(04 `normal_suspects.csv`)은 있으면 FP 후보로 함께 본다.
 
 ## 7. 피처군 ablation 규칙
 
@@ -65,9 +67,11 @@
 | 노트북 | 내용 | 담당 |
 |---|---|---|
 | `21_model_rule_baseline_CHS` | 규칙 기반 이동 RMS 베이스라인 | CHS |
-| `22_model_<name>_<INI-A>` | IsolationForest 또는 OC-SVM | `<INI-A>` |
-| `23_model_<name>_<INI-B>` | AutoEncoder 또는 GMM/Mahalanobis | `<INI-B>` |
-| `31_error_analysis_<INI>` | FN/FP 집중 조건, 비교표 `model_comparison.csv` | 미정 |
+| `24_model_forecasting_JIW` | CNN DeepAnT·LSTM-AD | JIW |
+| `25_model_graph_JIW` | MTAD-GAT·GDN | JIW |
+| `26_model_distribution_JIW` | MCD·OC-SVM·HBOS·COPOD·Deep SVDD | JIW |
+| `27_model_cnn_lstm_ae_CHS` | CNN+LSTM 오토인코더 (예정) | CHS |
+| `31_error_analysis_CHS` | FN/FP 집중 조건, 비교표 `model_comparison.csv` (완료) | CHS |
 
 - 착수 조건: 이 문서의 PR 병합.
 - 시작: `notebooks/_template.ipynb`를 복사해 `<번호>_<내용>_<이니셜>.ipynb`로 만들고 `NB`를 파일명과 같게 한다. 결과는 `RES / "metrics.csv"`에 필수(§5 컬럼). 경로는 `src/paths.py` 상수만, 그림·결과는 노트북 전용 폴더에만 쓴다.

@@ -16,4 +16,5 @@
   | `auc`, `fpr_sample`, `fpr_segment`, `delay_median_s` | 지표값 (없으면 빈칸) |
 
 - 필요하면 `cv_scores.csv`(fold별 상세), `error_cases.csv`(FN/FP 세그먼트 목록)를 같은 폴더에 추가한다.
+- `error_cases.csv`는 FN·FP 모두, 시드가 여럿이면 **전 시드** 저장을 권장한다(첫 시드만 저장하면 metrics 시드 평균과 어긋난다, 31 점검).
 - 모델 비교표 `results/model_comparison.csv`는 분석 노트북(3x)이 각 `*/metrics.csv`를 모아 생성한다. 직접 편집하지 않는다.
