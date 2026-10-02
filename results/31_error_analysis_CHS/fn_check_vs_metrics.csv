@@ -23,6 +23,18 @@ notebook,model,split,win_s,metrics_miss_seedmean,error_cases_miss_seed0,diff,ec_
 21_model_rule_baseline_CHS,rule3b_rms_state_ratio,time_block,1.0,12.0,0.0,12.0,False
 21_model_rule_baseline_CHS,rule3b_rms_state_ratio,time_block,2.0,4.0,0.0,4.0,False
 21_model_rule_baseline_CHS,rule3b_rms_state_ratio,time_block,3.0,4.0,0.0,4.0,False
+21_model_rule_baseline_CHS,rule3c_rms_state_dirz,group_kfold_seg,1.0,3.0,3.0,0.0,True
+21_model_rule_baseline_CHS,rule3c_rms_state_dirz,group_kfold_seg,2.0,1.0,0.0,1.0,False
+21_model_rule_baseline_CHS,rule3c_rms_state_dirz,group_kfold_seg,3.0,1.0,0.0,1.0,False
+21_model_rule_baseline_CHS,rule3c_rms_state_dirz,time_block,1.0,12.0,0.0,12.0,False
+21_model_rule_baseline_CHS,rule3c_rms_state_dirz,time_block,2.0,4.0,0.0,4.0,False
+21_model_rule_baseline_CHS,rule3c_rms_state_dirz,time_block,3.0,4.0,0.0,4.0,False
+21_model_rule_baseline_CHS,rule3d_rms_state_ratioz,group_kfold_seg,1.0,3.0,3.0,0.0,True
+21_model_rule_baseline_CHS,rule3d_rms_state_ratioz,group_kfold_seg,2.0,1.0,0.0,1.0,False
+21_model_rule_baseline_CHS,rule3d_rms_state_ratioz,group_kfold_seg,3.0,1.0,0.0,1.0,False
+21_model_rule_baseline_CHS,rule3d_rms_state_ratioz,time_block,1.0,12.0,0.0,12.0,False
+21_model_rule_baseline_CHS,rule3d_rms_state_ratioz,time_block,2.0,4.0,0.0,4.0,False
+21_model_rule_baseline_CHS,rule3d_rms_state_ratioz,time_block,3.0,4.0,0.0,4.0,False
 25_model_graph_JIW,gdn_w1s,time_block,1.0,1.0,0.0,1.0,True
 26_model_distribution_JIW,copod_amp_rel_w1s,group_kfold_seg,1.0,1.0,1.0,0.0,True
 26_model_distribution_JIW,copod_amp_rel_w1s,time_block,1.0,4.0,4.0,0.0,True
@@ -38,3 +50,8 @@ notebook,model,split,win_s,metrics_miss_seedmean,error_cases_miss_seed0,diff,ec_
 26_model_distribution_JIW,hbos_amp_shape_w1s,time_block,1.0,4.0,4.0,0.0,True
 26_model_distribution_JIW,hbos_amp_w1s,group_kfold_seg,1.0,1.0,1.0,0.0,True
 26_model_distribution_JIW,hbos_amp_w1s,time_block,1.0,2.0,2.0,0.0,True
+27_model_cnn_lstm_ae_CHS,cnn_lstm_ae_all3_w1s,group_kfold_seg,1.0,1.333333333333333,1.0,0.33333333333333304,True
+27_model_cnn_lstm_ae_CHS,cnn_lstm_ae_all3_w1s,time_block,1.0,7.0,7.0,0.0,True
+27_model_cnn_lstm_ae_CHS,cnn_lstm_ae_all3_w2s,time_block,2.0,1.0000000000000018,2.0,-0.9999999999999982,True
+27_model_cnn_lstm_ae_CHS,cnn_lstm_ae_vib2_w1s,group_kfold_seg,1.0,3.0,3.0,0.0,True
+27_model_cnn_lstm_ae_CHS,cnn_lstm_ae_vib2_w1s,time_block,1.0,11.0,11.0,0.0,True
