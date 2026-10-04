@@ -12,6 +12,28 @@
 
 입력 프레임은 `data_quality.load(key)` 결과(샘플 단위, `src`·`seg` 컬럼 포함) 또는 그것을
 `pd.concat`한 것이다. 세그먼트 키는 `seg_uid`(= `src_seg`)이며 없으면 `add_seg_uid`로 만든다.
+
+DC 제거 방식 (`remove_dc(method=...)`, 상세는 노트북 13 `13_preprocess_dc_check_CHS`에 둔다)
+- 정상 전류의 참 DC는 거의 상수다: 길이 50 세그먼트 202개의 세그먼트 평균 q05/q50/q95 = -0.12 / 0.57 / 1.19.
+  진동 두 채널은 0 근처다.
+- 전류 0.6 Hz(60 Hz 에일리어싱) 한 주기는 17샘플이다. 그보다 짧은 세그먼트의 "세그먼트 평균"은 DC가 아니라
+  사인 위상값이어서 평균을 빼면 AC를 깎는다. |세그먼트 평균|과 길이의 Spearman -0.835, 길이 8 이하 정상
+  세그먼트 |평균| q95 182, 9~16은 90, 50은 1.2. 이론상 평균 제거 후 남는 AC RMS는 n=5에서 47%,
+  n=10에서 84%(위상 평균)다.
+- 이상 세그먼트의 오프셋은 상수가 아니라 느린 드리프트 성분을 포함한다(세그먼트 내 선형 추세 R² 중앙값 0.14,
+  최대 0.70). 평균 제거는 이 드리프트를 남긴다.
+- 하이패스/밴드패스 필터는 기각했다: DC를 5초 안에 지우는 차단 주파수(0.2 Hz 이하)는 0.6 Hz AC를 40~55%
+  왜곡하고, causal 필터는 세그먼트 시작 1초 과도 오차가 AC 표준편차(82)를 넘는다.
+- 사인 피팅 DC는 03 A-1(G1-b) 결과 채택하지 않았다(1주기 미만 세그먼트에서 피팅이 불안정).
+- `mean`: 세그먼트 평균 제거. 오프라인 benchmark 전처리(benchmark_v1)로 유지한다.
+- `baseline`: 학습 정상 긴 세그먼트에서 추정한 채널별 상수(`fit_baseline`)를 뺀다. 길이 무관·causal한 후보.
+  **단, 이상 파일의 세그먼트 DC 오프셋(02 §2 형식 누수)은 제거되지 않는다** — 상수를 빼도 세그먼트 간 순위는
+  그대로라 |세그먼트 평균| 단독 AUC가 AI0 0.9443 / AI1 0.9198 / 전류 0.8911로 `mean` 적용 전과 같다. 03 A-3의
+  누수 차단 결과는 `mean` 기준이며, `baseline` 입력을 쓰는 모델은 이상의 DC를 "신호"로 보게 되므로 판정 보드 #5
+  (실제 이상 vs 계측 체인 변경)의 한계를 함께 적어야 한다. `expanding`도 진동 채널 누수(0.90 / 0.86)가 대부분 남는다.
+- `expanding`·`detrend`: ablation용. 각각 세그먼트 내 누적 평균(causal), 세그먼트 1차 선형 추세를 뺀다.
+- 센서 열에 NaN이 있으면 `expanding`(누적 개수에 NaN 포함)·`detrend`(세그먼트 전체 NaN)는 `mean`과 달리 NaN을
+  건너뛰지 않는다. 현재 데이터는 NaN 0건이라 영향이 없고, 결측이 생기면 호출 전에 처리한다.
 """
 from __future__ import annotations
 
@@ -26,7 +48,8 @@ VIB_DECIMALS = 6          # 정상 파일 진동 소수 자릿수(다수 형식)
 CUR_STEP = 1.19209        # 이상 파일 전류 양자화 격자 — 02 §2 (float32 eps × 1e7로 추정)
 CUR_STEP_TOL = 1e-3       # 격자 정수배 판정 허용 오차 (signal_checks.quantization_multiple_share와 동일)
 
-DC_METHODS = ("mean", "sine")
+DC_METHODS = ("mean", "baseline", "expanding", "detrend")
+BASELINE_MIN_LEN = 17     # 0.6 Hz 한 주기(10 Hz x 1/0.6) 이상 길이의 세그먼트만 기저선 추정에 사용
 
 
 def add_seg_uid(df: pd.DataFrame) -> pd.DataFrame:
@@ -73,33 +96,98 @@ def unify_format(df: pd.DataFrame, vib_decimals: int = VIB_DECIMALS,
     return out
 
 
-def remove_dc(df: pd.DataFrame, by: str = "seg_uid", method: str = "mean",
-              channels: list[str] | None = None, keep_dc: bool = False) -> pd.DataFrame:
-    """세그먼트(`by`)별 DC 오프셋을 제거한다.
+def fit_baseline(df_train: pd.DataFrame, by: str = "seg_uid", channels: list[str] | None = None,
+                 min_len: int = BASELINE_MIN_LEN, stat: str = "median") -> dict[str, float]:
+    """학습 정상 데이터에서 채널별 DC 기저선(상수)을 추정한다 — `remove_dc(method="baseline")`용.
 
-    - method="mean": 세그먼트 평균을 뺀다 (02 §9 채택안).
-    - method="sine": 세그먼트별 사인 피팅(A·sin(2πft+φ)+C)의 잔차를 쓴다 — 03 노트북 A-1(전류 DC가
-      에일리어싱 산물인지) 게이트 G1-a일 때 구현한다. 현재는 자리만 있다.
-    - keep_dc=True면 제거한 오프셋을 `<채널>_dc` 컬럼(세그먼트 상수)으로 남긴다. |DC| 자체는 형식 누수
-      채널이므로 모델 입력에는 넣지 않고 진단·리포트용으로만 쓴다.
+    - `df_train`은 **학습 fold의 정상 샘플만** 담은 프레임이어야 한다(형식 통일 이후, DC 제거 전).
+      라벨 열이 있어도 여기서 거르지 않는다 — 정상만 넘기는 것은 호출자 책임이다.
+    - 길이 `min_len`(기본 17 = 0.6 Hz 한 주기) 이상인 세그먼트의 세그먼트 평균을 모아 `stat`
+      ("median" 또는 "mean")으로 집계한 값 하나를 채널별로 반환한다. 짧은 세그먼트의 평균은 DC가 아니라
+      사인 위상값이므로 쓰지 않는다(모듈 docstring 참고).
+    - 조건을 만족하는 세그먼트가 0개면 `ValueError`.
+    - 반환 `{채널: float}`는 `remove_dc(method="baseline", baseline=...)`에 그대로 넣는다.
+    """
+    if stat not in ("median", "mean"):
+        raise ValueError(f"stat은 'median' 또는 'mean': {stat!r}")
+    channels = channels or [c for c in SENSORS if c in df_train.columns]
+    d = add_seg_uid(df_train) if by == "seg_uid" else df_train
+    sizes = d.groupby(by).size()
+    keep = sizes.index[sizes >= min_len]
+    if len(keep) == 0:
+        raise ValueError(f"길이 min_len={min_len} 이상인 세그먼트가 없다 (세그먼트 수 {len(sizes)}, 조건 만족 0)")
+    sub = d[d[by].isin(keep)]
+    out = {}
+    for ch in channels:
+        seg_mean = sub.groupby(by)[ch].mean()
+        out[ch] = float(seg_mean.median() if stat == "median" else seg_mean.mean())
+    return out
+
+
+def remove_dc(df: pd.DataFrame, by: str = "seg_uid", method: str = "mean",
+              channels: list[str] | None = None, keep_dc: bool = False,
+              baseline: dict[str, float] | None = None) -> pd.DataFrame:
+    """세그먼트(`by`)별 DC 오프셋을 제거한다. 반환은 복사본이며 원본 채널 열을 덮어쓴다.
+
+    - method="mean": 세그먼트 평균(상수)을 뺀다 (02 §9 채택안, 오프라인 benchmark 전처리). 1주기(17샘플)
+      미만 세그먼트에서는 위상값을 빼 AC를 깎는다.
+    - method="baseline": `baseline[채널]` 상수를 뺀다(`fit_baseline` 결과). 길이 무관·causal. `baseline`이
+      None이거나 채널 키가 빠지면 `ValueError`. 이상 파일의 세그먼트 DC(형식 누수)는 남는다(모듈 docstring 참고).
+    - method="expanding": 세그먼트 안에서 첫 샘플부터 현재 샘플까지의 누적 평균(causal)을 뺀다. 첫 샘플은
+      항상 0이 된다. 1주기 미만 구간에서는 `mean`과 같은 위상 편향을 가지며 ablation용이다.
+    - method="detrend": 세그먼트별 1차 선형 추세(샘플 순서 기준, `np.polyfit(deg=1)`)를 뺀다. 느린 드리프트까지
+      제거하는 ablation용이다. 길이 3 미만 세그먼트는 평균 제거로 대체한다.
+    - 세그먼트 내부 행 순서가 시간순이라고 가정하며, 행 순서는 바꾸지 않는다.
+    - keep_dc=True면 제거한 오프셋을 `<채널>_dc` 컬럼으로 남긴다(mean=세그먼트 상수, baseline=기저선 상수,
+      expanding=샘플별 누적 평균, detrend=샘플별 추세값). |DC| 자체는 형식 누수 채널이므로 모델 입력에는
+      넣지 않고 진단·리포트용으로만 쓴다.
     """
     if method not in DC_METHODS:
         raise ValueError(f"method는 {DC_METHODS} 중 하나: {method!r}")
-    if method == "sine":
-        raise NotImplementedError("사인 피팅 잔차 방식은 03 노트북 A-1 게이트 결과(G1-a)에 따라 추가한다")
     channels = channels or [c for c in SENSORS if c in df.columns]
-    out = add_seg_uid(df) if by == "seg_uid" else df.copy()
+    if method == "baseline":
+        missing = [ch for ch in channels if baseline is None or ch not in baseline]
+        if missing:
+            raise ValueError(f"method='baseline'에는 채널 {missing}의 baseline 값이 필요하다 (fit_baseline 결과를 넣을 것)")
+    # add_seg_uid는 seg_uid가 이미 있으면 같은 객체를 돌려주므로, 입력 프레임이 바뀌지 않게 항상 복사한다
+    out = add_seg_uid(df) if by == "seg_uid" else df
+    if out is df:
+        out = df.copy()
     for ch in channels:
-        dc = out.groupby(by)[ch].transform("mean")
+        if method == "mean":
+            dc = out.groupby(by)[ch].transform("mean")
+        elif method == "baseline":
+            dc = pd.Series(float(baseline[ch]), index=out.index)
+        elif method == "expanding":
+            # 위치 기반 누적합 / 누적 개수 — 인덱스가 중복(concat)이어도 행 정렬이 유지된다
+            g = out.groupby(by)[ch]
+            dc = g.cumsum() / (g.cumcount() + 1)
+        else:  # detrend
+            x = out[ch].to_numpy(dtype=float)
+            trend = np.empty_like(x)
+            for pos in out.groupby(by).indices.values():
+                n = len(pos)
+                if n < 3:
+                    trend[pos] = x[pos].mean()
+                else:
+                    t = np.arange(n, dtype=float)
+                    slope, icpt = np.polyfit(t, x[pos], 1)
+                    trend[pos] = slope * t + icpt
+            dc = pd.Series(trend, index=out.index)
         if keep_dc:
             out[f"{ch}_dc"] = dc
         out[ch] = out[ch] - dc
     return out
 
 
-def preprocess(df: pd.DataFrame, dc_method: str = "mean", **unify_kwargs) -> pd.DataFrame:
-    """표준 전처리 파이프라인: add_seg_uid → unify_format → remove_dc. 모델 노트북은 이 함수만 호출한다."""
-    return remove_dc(unify_format(add_seg_uid(df), **unify_kwargs), method=dc_method)
+def preprocess(df: pd.DataFrame, dc_method: str = "mean", baseline: dict[str, float] | None = None,
+               **unify_kwargs) -> pd.DataFrame:
+    """표준 전처리 파이프라인: add_seg_uid → unify_format → remove_dc. 모델 노트북은 이 함수만 호출한다.
+
+    기본 호출(`preprocess(df)`)은 `mean` 방식(benchmark_v1)이다. `dc_method="baseline"`이면 `fit_baseline`
+    결과를 `baseline`으로 넘긴다.
+    """
+    return remove_dc(unify_format(add_seg_uid(df), **unify_kwargs), method=dc_method, baseline=baseline)
 
 
 # --- 형식 피처 (진단 전용) --------------------------------------------------
