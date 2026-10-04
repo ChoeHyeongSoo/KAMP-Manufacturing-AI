@@ -43,6 +43,8 @@
 - 그림·결과는 `FIG, RES = paths.nb_dirs(NB)`로 받은 노트북 전용 폴더(`figures/<노트북명>/`, `results/<노트북명>/`)에만 저장한다. `figures/` 바로 아래나 남의 폴더에 쓰지 않는다.
 - 경로는 `src/paths.py` 상수만 쓴다(절대경로·`../` 하드코딩 금지). 긴 로직은 노트북이 아니라 `src/` 역할별 모듈(`preprocess`/`split`/`features`/`models`/`evaluate`)에 둔다.
 - 노트북 1개 = 담당자 1명. 남의 노트북은 수정하지 않는다. `src/` 공통 파일(`paths`·`preprocess`·`split`) 변경은 작은 PR로 분리한다.
+  - **타인 산출물 정정**: 남의 파일에 오류가 있으면 원칙은 근거 수치와 함께 알리고 소유자가 고친다. 대신 고쳐야 할 때는 PR 본문의 "타인 산출물 정정" 표(대상·틀린 내용·변경 전→후 수치·정정 전 커밋 해시)를 채우고 소유자 승인 후 병합한다(`.github/CODEOWNERS`가 리뷰를 자동 요청). 옛 파일을 별도 폴더에 복사해 두지 않는다 — 이력은 git과 리포트 상단 "정정 이력" 표(날짜·항목·전→후·PR 번호)로 남긴다.
+  - **공통 함수 변경 계약**: `src/` 공통 함수는 기본 인자 호출 결과를 바꾸지 않는다. 새 동작은 새 인자 값이나 새 함수로 추가하고(`_v2` 접미사 금지), PR에 변경 전과의 동일성 확인 방법을 적는다(예: `remove_dc(method=...)`, PR #29).
 - 모델 노트북은 `RES / "metrics.csv"`에 공통 컬럼(`model, split, fold, auc, fpr_sample, fpr_segment, delay_median_s`)으로 저장한다(`results/README.md`).
 - `data/processed/`에 새 파일을 만들면 파일명 앞에 노트북 번호를 붙이고 `data/README.md` 표에 등록한다.
 - 개인 실험은 `notebooks/scratch/`(git 제외)에서 한다.
