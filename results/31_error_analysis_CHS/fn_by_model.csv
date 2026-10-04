@@ -101,6 +101,23 @@ notebook,model,win_s,split,seg_uid,seg_id,fn_category,n_miss
 21_model_rule_baseline_CHS,rule3d_rms_state_ratioz,1.0,group_kfold_seg,outlier_18,18,기타,0
 21_model_rule_baseline_CHS,rule3d_rms_state_ratioz,1.0,group_kfold_seg,outlier_19,19,전 채널 조용,1
 21_model_rule_baseline_CHS,rule3d_rms_state_ratioz,1.0,group_kfold_seg,outlier_20,20,전 채널 조용,1
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_1,1,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_2,2,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_3,3,전 채널 조용,1
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_4,4,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_6,6,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_7,7,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_8,8,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_11,11,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_12,12,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_13,13,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_14,14,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_15,15,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_16,16,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_17,17,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_18,18,기타,0
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_19,19,전 채널 조용,1
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_20,20,전 채널 조용,1
 26_model_distribution_JIW,copod_amp_rel_w1s,1.0,group_kfold_seg,outlier_19,19,전 채널 조용,1
 26_model_distribution_JIW,copod_amp_rel_w1s,1.0,time_block,outlier_19,19,전 채널 조용,4
 26_model_distribution_JIW,copod_amp_shape_w1s,1.0,group_kfold_seg,outlier_19,19,전 채널 조용,1

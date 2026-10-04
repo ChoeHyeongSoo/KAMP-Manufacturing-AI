@@ -9,10 +9,10 @@
 
 | 절 | 핵심 결과 | 출처 |
 |---|---|---|
-| A 비교표 | 평균 행 136행(규칙 6종 + 모델 27종), 1초 gkf AUC 0.9998 이상 9개 모델, 규칙 베이스라인 0.7840~0.8696 | `results/model_comparison.csv` |
-| B FN 이원화 | 규칙 6종과 진동 2채널 AE는 3·19·20 미탐, 전류 입력 모델은 모두 탐지, copod·hbos 계열·deep_svdd만 19를 놓침 | `results/31_error_analysis_CHS/fn_by_model.csv`, `fn_category_summary.csv` |
+| A 비교표 | 평균 행 142행(규칙 7종 + 모델 27종), 1초 gkf AUC 0.9998 이상 9개 모델, 규칙 베이스라인 0.7840~0.8696 | `results/model_comparison.csv` |
+| B FN 이원화 | 규칙 7종(causal 변형 rule3e 포함)과 진동 2채널 AE는 3·19·20 미탐, 전류 입력 모델은 모두 탐지, copod·hbos 계열·deep_svdd만 19를 놓침 | `results/31_error_analysis_CHS/fn_by_model.csv`, `fn_category_summary.csv` |
 | C FP 집중 | 27모델 중 19개가 고부하에 FP 집중, 윈도우 z-score 입력만 저부하로 반전, 04 의심 세그먼트와 겹침이 큼 | `fp_by_state.csv`, `fp_by_block.csv`, `fp_common_segments.csv` |
-| D 상관 구조 | \|Δρ\|≥0.5인 쌍 69/351, 핵심은 채널 관계 반전 | `corr_break_normal_vs_outlier.csv` |
+| D 상관 구조 | \|Δρ\|≥0.5인 쌍 93/465(31열, relwin 4열 포함), 핵심은 채널 관계 반전이며 causal 누적 상관에서도 재현 | `corr_break_normal_vs_outlier.csv` |
 | E PCA | 이상 17세그먼트 전부 amp18에서도 SPE·T² 모두 정상 q99 초과 | `fn_pca_spe_t2.csv` |
 | F KS | sine 3열 KS 0.99~1.00, KS와 \|Cliff δ\| 순위가 어긋나는 형태 차이 후보 4개 | `ks_segment_normal_vs_outlier.csv` |
 
@@ -22,7 +22,7 @@
 
 ## 1. A. 모델 비교표
 
-**방법.** `results/*/metrics.csv`(21·24·25·26·27) 748행을 합친 뒤 fold 평균 행만 모아 `results/model_comparison.csv`(136행)를 만들었다. 분할×윈도우별 행 수는 group_kfold_seg(gkf)·time_block 모두 1초 33 / 2초 29 / 3초 6(3초는 규칙 6종만 있음). 27은 error_cases를 전 시드 저장하므로 B·C에서는 `seed` 열로 첫 시드만 쓴다. [데이터: 노트북 셀 5 출력, `model_comparison.csv`]
+**방법.** `results/*/metrics.csv`(21·24·25·26·27) 781행을 합친 뒤 fold 평균 행만 모아 `results/model_comparison.csv`(142행)를 만들었다. 분할×윈도우별 행 수는 group_kfold_seg(gkf)·time_block 모두 1초 34 / 2초 30 / 3초 7(3초는 규칙 7종만 있음). 21의 rule3e(rule3c의 causal 변형, `vib_corr01_cum`)가 새로 들어갔다. 27은 error_cases를 전 시드 저장하므로 B·C에서는 `seed` 열로 첫 시드만 쓴다. [데이터: 노트북 셀 5 출력, `model_comparison.csv`]
 
 **발견.**
 - gkf 1초 AUC / fpr_segment 상위: mcd_amp_sine 1.0000 / 0.0546, ocsvm_amp_sine 1.0000 / 0.0896, cnn_lstm_ae_cur1 1.0000 / 0.0666, cnn_lstm_ae_all3_res 1.0000 / 0.0979, cnn_deepant 0.9999 / 0.0317, gdn 0.9999 / 0.0426, mtad_gat 0.9999 / 0.0286, ocsvm_amp_rel 0.9999 / 0.1106, lstm_ad 0.9998 / 0.0349. [데이터: `model_comparison.csv`]
@@ -31,7 +31,8 @@
 - 규칙 베이스라인(gkf 1초 AUC / fpr_segment): rule3 0.8696 / 0.0358, rule3c 0.8671 / 0.0303, rule3b 0.8058 / 0.0399, rule2 0.7996 / 0.0468, rule1 0.7864 / 0.0395, rule3d 0.7840 / 0.0419. time_block에서는 rule3c가 0.8841 / 0.0162로 규칙 중 최고다. [데이터]
 - 세그먼트 오경보율 최저는 copod_amp_sine 0.0264, mtad_gat 0.0286, rule3c 0.0303, cnn_deepant 0.0317, 최고는 cnn_lstm_ae_all3_zwin 0.1482, ocsvm_amp_rel 0.1106. AUC가 거의 같아도 오경보율은 5배 가까이 벌어진다. [데이터]
 - time_block 1초에서는 ocsvm_amp_rel fpr_segment가 0.2429로 gkf(0.1106)보다 크게 나빠진다. cnn_deepant는 AUC 0.9999 / 0.0387로 유지된다. [데이터]
-- 3초 윈도우는 규칙 6종만 있다(gkf AUC rule3 0.9496 ~ rule3d 0.8932). [데이터]
+- 3초 윈도우는 규칙 7종만 있다(gkf AUC rule3 0.9496 ~ rule3d 0.8932, rule3e 0.9272). [데이터]
+- rule3c의 causal 변형 rule3e는 1초 gkf AUC 0.8435 / fpr_segment 0.0323, time_block 0.8841 → 0.8502 / 0.0162 → 0.0141로, 세그먼트 브로드캐스트 상관이 주던 순위 이득의 약 1/3이 미래 정보였음을 보인다(21 §7). [데이터]
 - **`_sine`·`_rel` 접미사 모델은 입력에 세그먼트 단위 브로드캐스트 피처(전류 사인 적합, 방향·비율 피처)가 들어간다.** 03에서 사인 잔차 피처의 세그먼트 단위 AUC가 1.000으로 나왔고(`reports/03_diagnosis_recheck_CHS.md`), 이 값은 날짜 교란 가능성과 분리되지 않는다. 따라서 `_sine`·`_rel` 결과는 진폭 전용 결과(cnn_deepant·lstm_ad·mtad_gat·gdn 및 접미사 없는 분포 모델)와 분리해 읽는다. [추정: 교란 여부는 별도 ablation 필요]
 
 **시사점.** AUC만으로는 상위 모델을 가르기 어렵다(상위 7개가 0.9998 이상). 순위는 fpr_segment와 시간 블록 분할의 안정성으로 가려야 한다. 규칙 → 비지도 모델의 AUC 차이(0.79~0.87 → 0.94~1.00)는 크지만 이상이 1건이라 이 차이의 신뢰구간은 아직 없다. [추정]
@@ -45,7 +46,7 @@
 **방법.** 노트북별 `error_cases.csv`를 `fn_long`으로 통일하고, 미탐 세그먼트를 판정 불가(0·5·9·10: 1초 윈도우 없음, 평가 분모 밖) / 전 채널 조용(3·19·20) / 기타로 나눴다. [데이터: `fn_by_model.csv`, `fn_category_summary.csv`]
 
 **발견.**
-- 규칙 6종은 gkf 1초에서 3·19·20을 모두 놓친다(각 1 fold). 상태별 방향 기준화(rule3c·rule3d)를 더해도 미탐 집합은 같다. [데이터: `fn_category_summary.csv`]
+- 규칙 7종은 gkf 1초에서 3·19·20을 모두 놓친다(각 1 fold). 상태별 방향 기준화(rule3c·rule3d)와 그 causal 변형(rule3e)을 더해도 미탐 집합은 같다. [데이터: `fn_category_summary.csv`]
 - 27의 진동 2채널 AE(cnn_lstm_ae_vib2)도 규칙과 똑같이 3·19·20을 놓친다(gkf 각 1 fold, time_block 3×3·19×4·20×4). 3채널 AE(cnn_lstm_ae_all3)는 gkf에서 20을 1 fold, time_block에서 3×1·19×3·20×3 놓친다. 전류를 입력에 넣은 변형(cur1·all3_res·all3_zwin·pca_raw_ae_all3)은 미탐 0이다. [데이터]
 - 24~26의 21모델 중 gkf 1초에서 19를 놓친 것은 copod_amp·copod_amp_shape·copod_amp_rel·hbos_amp·hbos_amp_shape·deep_svdd 6종(각 1 fold)뿐이다. 나머지 15개(cnn_deepant·lstm_ad·mtad_gat·gdn·mcd 4종·ocsvm 4종·copod_amp_sine·hbos_amp_sine·hbos_amp_rel)는 미탐 0이다. [데이터]
 - time_block 1초에서는 copod_amp_sine·copod_amp_rel·hbos_amp_shape·copod_amp·copod_amp_shape가 19를 4블록 모두, hbos_amp는 2블록 놓친다. copod_amp는 3도 1블록, copod_amp_shape는 4(기타)도 2블록 놓친다. 주력 모델(CNN·LSTM-AD·MTAD-GAT·GDN·MCD·OC-SVM)은 미탐 0이다. [데이터: `fn_category_summary.csv`]
@@ -90,10 +91,11 @@
 
 ## 4. D. 정상 vs 이상 상관 구조 변화
 
-**방법.** 1초 윈도우의 정상 전체 vs 이상 전체 Spearman 상관(중복 열 제거 후 27열)의 쌍별 차이 ρ_이상 − ρ_정상. 윈도우가 비독립이라 p값은 보고하지 않는다. [데이터: `corr_break_normal_vs_outlier.csv`, 노트북 셀 17 출력]
+**방법.** 1초 윈도우의 정상 전체 vs 이상 전체 Spearman 상관(중복 열 제거 후 31열, 11 relwin 4열 포함)의 쌍별 차이 ρ_이상 − ρ_정상. 윈도우가 비독립이라 p값은 보고하지 않는다. [데이터: `corr_break_normal_vs_outlier.csv`, 노트북 셀 17 출력]
 
 **발견.**
-- 351쌍 중 |Δρ|≥0.5가 **69쌍**. 상위 쌍은 전부 vib_rms_ratio·vib_corr01·cur_fit_r2가 낀 쌍이다. 예: AI1_p2p–vib_rms_ratio −0.759 → +0.506(Δ 1.265), AI2_rms–vib_corr01 0.682 → −0.369, cur_fit_r2–vib_corr01 0.709 → −0.307. [데이터]
+- 465쌍 중 |Δρ|≥0.5가 **93쌍**(relwin 열이 낀 쌍 24). 상위 쌍은 전부 vib_rms_ratio·vib_corr01(_cum)·cur_fit_r2가 낀 쌍이다. 예: AI1_p2p–vib_rms_ratio −0.759 → +0.506(Δ 1.265), AI1_peak–vib_corr01_cum 0.684 → −0.458(Δ 1.142), AI2_rms–vib_corr01 0.682 → −0.369, cur_fit_r2–vib_corr01 0.709 → −0.307. [데이터]
+- causal 누적 상관 `vib_corr01_cum`도 세그먼트 전체 상관과 같은 크기의 반전을 보여, 아래 "실시간 과대평가" 우려 중 상관 피처 자체에 대한 부분은 완화된다(규칙 성능의 과대평가 폭은 21 rule3e 참고). [데이터]
 - 순수 진폭 쌍 중 큰 것은 AI1_p2p–AI1_crest −0.404 → +0.520(Δ 0.924). [데이터]
 
 **시사점.** 정상에서는 채널 간 진폭·방향·적합도가 함께 움직이고 이상에서는 이 관계가 뒤집힌다. 다만 상위 쌍이 세그먼트 브로드캐스트·방향 피처를 포함하므로 실시간 윈도우 판정 근거로는 과대평가일 수 있다. [추정]
