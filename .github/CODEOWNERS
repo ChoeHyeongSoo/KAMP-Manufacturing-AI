@@ -1,0 +1,6 @@
+# 파일명 이니셜 기준 산출물 소유자. 해당 파일을 수정하는 PR에는 소유자 리뷰가 자동 요청된다.
+# 소유자가 자기 파일을 고치는 PR에는 영향이 없다. 공통 파일(src/ 공통 모듈, CLAUDE.md, README 등)은 소유자를 두지 않는다.
+**/*CHS*   @ChoeHyeongSoo
+**/*JIW*   @inwoonghub
+**/*jiw*   @inwoonghub
+**/*JSC*   @JisuChung
