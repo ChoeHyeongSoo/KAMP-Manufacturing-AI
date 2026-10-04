@@ -28,6 +28,7 @@ notebook,model,split,auc,fpr_sample,fpr_segment,delay_median_s,win_s,n_out_seg,n
 26_model_distribution_JIW,deep_svdd_w1s,group_kfold_seg,0.9359043684985964,0.0190598611579825,0.0913775497153802,0.9,1.0,3.4,3.2666666666666666,deep_svdd,distribution,0.9607843137254902
 21_model_rule_baseline_CHS,rule3_rms_state_dir,group_kfold_seg,0.8695863340418178,0.013756387036528,0.0357778001814699,0.95,1.0,3.4,2.8,rule3_rms_state_dir,rule,0.8235294117647058
 21_model_rule_baseline_CHS,rule3c_rms_state_dirz,group_kfold_seg,0.8671356475369197,0.0119260983218252,0.0302565324583673,0.95,1.0,3.4,2.8,rule3c_rms_state_dirz,rule,0.8235294117647058
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,group_kfold_seg,0.8435360845395488,0.0110409599626566,0.0322523123575471,0.95,1.0,3.4,2.8,rule3e_rms_state_dirz_cum,rule,0.8235294117647058
 21_model_rule_baseline_CHS,rule3b_rms_state_ratio,group_kfold_seg,0.8058473087340043,0.0104611687667704,0.0398578135302366,0.95,1.0,3.4,2.8,rule3b_rms_state_ratio,rule,0.8235294117647058
 21_model_rule_baseline_CHS,rule2_rms_state,group_kfold_seg,0.7996476180714434,0.0118688600028828,0.0467563251643122,0.95,1.0,3.4,2.8,rule2_rms_state,rule,0.8235294117647058
 21_model_rule_baseline_CHS,rule1_rms_ai0,group_kfold_seg,0.7864056639744282,0.0109455476261049,0.0395234051790986,0.95,1.0,3.4,2.8,rule1_rms_ai0,rule,0.8235294117647058
@@ -57,12 +58,14 @@ notebook,model,split,auc,fpr_sample,fpr_segment,delay_median_s,win_s,n_out_seg,n
 26_model_distribution_JIW,deep_svdd_w2s,group_kfold_seg,0.9577801536067244,0.0315810945627994,0.1000448543790333,1.9,2.0,2.6,2.6,deep_svdd,distribution,1.0
 21_model_rule_baseline_CHS,rule3_rms_state_dir,group_kfold_seg,0.9100047383510173,0.012804699840376,0.0226569299619853,1.9,2.0,2.6,2.4,rule3_rms_state_dir,rule,0.923076923076923
 21_model_rule_baseline_CHS,rule3c_rms_state_dirz,group_kfold_seg,0.9061275192612808,0.0127701054482195,0.0243229336948127,1.9,2.0,2.6,2.4,rule3c_rms_state_dirz,rule,0.923076923076923
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,group_kfold_seg,0.8976667255069918,0.0119577294586745,0.027053105273859,1.9,2.0,2.6,2.4,rule3e_rms_state_dirz_cum,rule,0.923076923076923
 21_model_rule_baseline_CHS,rule3b_rms_state_ratio,group_kfold_seg,0.86609572853112,0.0105347470604698,0.0245417864757248,1.9,2.0,2.6,2.4,rule3b_rms_state_ratio,rule,0.923076923076923
 21_model_rule_baseline_CHS,rule2_rms_state,group_kfold_seg,0.8654715436719552,0.0123095294487495,0.0336351143391844,1.9,2.0,2.6,2.4,rule2_rms_state,rule,0.923076923076923
 21_model_rule_baseline_CHS,rule1_rms_ai0,group_kfold_seg,0.8580820640272983,0.0122724572612498,0.0245129900080915,1.9,2.0,2.6,2.4,rule1_rms_ai0,rule,0.923076923076923
 21_model_rule_baseline_CHS,rule3d_rms_state_ratioz,group_kfold_seg,0.839124202645045,0.0092453884319149,0.033120847920616,1.9,2.0,2.6,2.4,rule3d_rms_state_ratioz,rule,0.923076923076923
 21_model_rule_baseline_CHS,rule3_rms_state_dir,group_kfold_seg,0.9496300279364136,0.009857057274862,0.01647743634045,2.9,3.0,2.0,1.8,rule3_rms_state_dir,rule,0.9
 21_model_rule_baseline_CHS,rule3c_rms_state_dirz,group_kfold_seg,0.94529493837687,0.0119768651006609,0.0192932658686083,2.9,3.0,2.0,1.8,rule3c_rms_state_dirz,rule,0.9
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,group_kfold_seg,0.9271506084799628,0.010553496417099,0.0166286149162861,2.9,3.0,2.0,1.8,rule3e_rms_state_dirz_cum,rule,0.9
 21_model_rule_baseline_CHS,rule2_rms_state,group_kfold_seg,0.911046555980547,0.0133764430149994,0.0275124439508001,2.9,3.0,2.0,1.8,rule2_rms_state,rule,0.9
 21_model_rule_baseline_CHS,rule1_rms_ai0,group_kfold_seg,0.9030265058552336,0.011236569653893,0.021994940145625,2.9,3.0,2.0,1.8,rule1_rms_ai0,rule,0.9
 21_model_rule_baseline_CHS,rule3b_rms_state_ratio,group_kfold_seg,0.8956042167273855,0.0111147878408086,0.0192161339421613,2.9,3.0,2.0,1.8,rule3b_rms_state_ratio,rule,0.9
@@ -96,6 +99,7 @@ notebook,model,split,auc,fpr_sample,fpr_segment,delay_median_s,win_s,n_out_seg,n
 27_model_cnn_lstm_ae_CHS,cnn_lstm_ae_vib2_w1s,time_block,0.920931432828149,0.0297976310529943,0.1125222816399287,0.9,1.0,17.0,14.25,cnn_lstm_ae_vib2,cnn,0.8382352941176471
 21_model_rule_baseline_CHS,rule3c_rms_state_dirz,time_block,0.8840595764373811,0.0046203861348104,0.0162037037037037,0.9,1.0,17.0,14.0,rule3c_rms_state_dirz,rule,0.8235294117647058
 21_model_rule_baseline_CHS,rule3_rms_state_dir,time_block,0.8685899792049003,0.0069828832674665,0.0186546840958605,0.9,1.0,17.0,14.0,rule3_rms_state_dir,rule,0.8235294117647058
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,time_block,0.8502407128109707,0.0050242633561351,0.0140993265993266,0.9,1.0,17.0,14.0,rule3e_rms_state_dirz_cum,rule,0.8235294117647058
 21_model_rule_baseline_CHS,rule3b_rms_state_ratio,time_block,0.790012261523573,0.0036054911689201,0.0195583283818577,0.9,1.0,17.0,14.0,rule3b_rms_state_ratio,rule,0.8235294117647058
 21_model_rule_baseline_CHS,rule2_rms_state,time_block,0.7883592903983038,0.0138958519896268,0.0455783323430382,0.9,1.0,17.0,14.0,rule2_rms_state,rule,0.8235294117647058
 21_model_rule_baseline_CHS,rule1_rms_ai0,time_block,0.7785795259512771,0.0115669519790472,0.0384358288770053,0.9,1.0,17.0,14.0,rule1_rms_ai0,rule,0.8235294117647058
@@ -125,12 +129,14 @@ notebook,model,split,auc,fpr_sample,fpr_segment,delay_median_s,win_s,n_out_seg,n
 26_model_distribution_JIW,deep_svdd_w2s,time_block,0.9581863414945488,0.0557008198555448,0.1782547855570168,1.9,2.0,13.0,12.916666666666666,deep_svdd,distribution,0.9935897435897435
 21_model_rule_baseline_CHS,rule3c_rms_state_dirz,time_block,0.9291264889100044,0.0022461656364388,0.0054945054945054,1.9,2.0,13.0,12.0,rule3c_rms_state_dirz,rule,0.9230769230769231
 21_model_rule_baseline_CHS,rule3_rms_state_dir,time_block,0.9195715887099032,0.005615414091097,0.0082417582417582,1.9,2.0,13.0,12.0,rule3_rms_state_dir,rule,0.9230769230769231
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,time_block,0.9158909528052708,0.0021881838074398,0.0027472527472527,1.9,2.0,13.0,12.0,rule3e_rms_state_dirz_cum,rule,0.9230769230769231
 21_model_rule_baseline_CHS,rule2_rms_state,time_block,0.8621109972689489,0.0166838992302953,0.0362871408510353,1.9,2.0,13.0,12.0,rule2_rms_state,rule,0.9230769230769231
 21_model_rule_baseline_CHS,rule1_rms_ai0,time_block,0.8579907538253804,0.0184808092521071,0.0307926353565298,1.9,2.0,13.0,12.0,rule1_rms_ai0,rule,0.9230769230769231
 21_model_rule_baseline_CHS,rule3b_rms_state_ratio,time_block,0.8548397309595006,0.00764758039764,0.0144354293441514,1.9,2.0,13.0,12.0,rule3b_rms_state_ratio,rule,0.9230769230769231
 21_model_rule_baseline_CHS,rule3d_rms_state_ratioz,time_block,0.8416731822228501,0.0063586389087315,0.0253657431142218,1.9,2.0,13.0,12.0,rule3d_rms_state_ratioz,rule,0.9230769230769231
 21_model_rule_baseline_CHS,rule3c_rms_state_dirz,time_block,0.971687867218748,0.0017667844522968,0.0033783783783783,2.9,3.0,10.0,9.0,rule3c_rms_state_dirz,rule,0.9
 21_model_rule_baseline_CHS,rule3_rms_state_dir,time_block,0.9713339441554684,0.0036007470206505,0.0069498069498069,2.9,3.0,10.0,9.0,rule3_rms_state_dir,rule,0.9
+21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,time_block,0.9560922111524912,0.0026501766784452,0.0033783783783783,2.9,3.0,10.0,9.0,rule3e_rms_state_dirz_cum,rule,0.9
 21_model_rule_baseline_CHS,rule2_rms_state,time_block,0.9150651314449814,0.0273069148024642,0.0496372996372996,2.9,3.0,10.0,9.0,rule2_rms_state,rule,0.9
 21_model_rule_baseline_CHS,rule1_rms_ai0,time_block,0.9129842702154266,0.0273776935637567,0.0428805428805428,2.9,3.0,10.0,9.0,rule1_rms_ai0,rule,0.9
 21_model_rule_baseline_CHS,rule3d_rms_state_ratioz,time_block,0.8987910874549041,0.0103634106820028,0.0250234000234,2.9,3.0,10.0,9.0,rule3d_rms_state_ratioz,rule,0.9
