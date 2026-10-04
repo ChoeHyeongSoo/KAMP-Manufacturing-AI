@@ -17,6 +17,12 @@
          단 `vib_rms_ratio`(AI0 rms / AI1 rms)는 다른 rel 피처와 달리 세그먼트 브로드캐스트가 아니라 **윈도우 단위**로
          계산한다(AI1 rms가 0이면 nan). 근거: 정상은 하부(AI1)가 더 크고 이상은 상부(AI0)가 역전되는 방향 정보이며
          세그먼트 단독 AUC 0.776 (파인블랭킹 문서 §5).
+- relwin: 윈도우 단위 채널 관계(옵트인, 기본 출력에는 포함되지 않음) — `vib_corr01_win`·`cur_ac1_win`(그 윈도우 안
+         샘플만으로 계산), `vib_corr01_cum`·`cur_ac1_cum`(세그먼트 시작부터 현재 윈도우 끝까지 누적한 causal 버전).
+         rel의 `vib_corr01`·`cur_ac1`은 세그먼트 전체에서 한 번 계산해 모든 윈도우에 브로드캐스트하므로, 세그먼트 초반
+         윈도우를 판정할 때 후반 샘플까지 쓰게 되어 실시간 성능으로는 과대평가다. relwin은 이 미래 정보 사용을 없앤 대안이다.
+         1초 윈도우(10샘플)의 상관은 분산이 커서 `_win`은 불안정하고, 표본이 누적되는 `_cum`이 실무 후보다.
+         `groups`에 "relwin"을 명시한 경우에만 열이 추가되며 기본 `window_features` 출력은 바뀌지 않는다.
 
 `t_abs`(윈도우 시작의 절대 시각)는 시간 블록 분할·정렬용이다. 날짜가 곧 라벨이므로 **모델 입력 금지**.
 """
@@ -40,6 +46,8 @@ AMP_KEYS = ("rms", "peak", "p2p", "kurt", "crest", "skew")
 SHAPE_KEYS = ("kurt", "crest", "skew")
 SINE_KEYS = ("cur_fit_resid_rms", "cur_fit_r2", "cur_fit_f_dev")
 REL_KEYS = ("vib_corr01", "cur_ac1", "vib_rms_ratio")
+RELWIN_KEYS = ("vib_corr01_win", "cur_ac1_win", "vib_corr01_cum", "cur_ac1_cum")
+ALL_GROUPS = GROUPS + ("relwin",)
 
 META_COLS = {"seg_uid", "src", "label", "win_s", "t_start", "t_abs", "n_samples", "fold", "block",
              "state", "vib_grade", "cur_grade"}
@@ -111,6 +119,35 @@ def relation_features(seg: pd.DataFrame) -> dict:
     return {"vib_corr01": corr, "cur_ac1": float(ac[1]) if len(ac) > 1 else np.nan}
 
 
+def _corr_ac1(x0: np.ndarray, x1: np.ndarray, cur: np.ndarray) -> tuple[float, float]:
+    """(AI0·AI1 피어슨 상관, 전류 lag-1 자기상관). 길이 < 4면 둘 다 nan, 표준편차 0인 쪽은 nan."""
+    if len(x0) < 4:
+        return np.nan, np.nan
+    x0, x1, cur = (np.asarray(v, dtype=float) for v in (x0, x1, cur))
+    corr = float(np.corrcoef(x0, x1)[0, 1]) if x0.std() > 0 and x1.std() > 0 else np.nan
+    ac = float(sc.autocorr(cur, max_lag=1)[1]) if cur.std() > 0 else np.nan
+    return corr, ac
+
+
+def window_relation_features(x0: np.ndarray, x1: np.ndarray, cur: np.ndarray) -> dict:
+    """윈도우 안 샘플만으로 계산한 관계 피처: vib_corr01_win(AI0·AI1 피어슨 상관), cur_ac1_win(전류 lag-1 자기상관).
+
+    길이 < 4이거나 표준편차가 0이면 nan. `relation_features`와 같은 수식을 윈도우 샘플에만 적용한다.
+    """
+    corr, ac = _corr_ac1(x0, x1, cur)
+    return {"vib_corr01_win": corr, "cur_ac1_win": ac}
+
+
+def cumulative_relation_features(x0: np.ndarray, x1: np.ndarray, cur: np.ndarray, end: int) -> dict:
+    """세그먼트 시작(0)부터 end(배타적, = 윈도우 끝)까지 누적한 causal 관계 피처: vib_corr01_cum, cur_ac1_cum.
+
+    윈도우 끝 이후 샘플을 쓰지 않으므로 실시간 판정에 쓸 수 있다. end가 세그먼트 끝이면 `relation_features` 값과 같다.
+    길이 < 4면 nan.
+    """
+    corr, ac = _corr_ac1(x0[:end], x1[:end], cur[:end])
+    return {"vib_corr01_cum": corr, "cur_ac1_cum": ac}
+
+
 def _label(g: pd.DataFrame) -> int:
     if "Equipment_state" in g.columns:
         return int(round(g["Equipment_state"].mean()))
@@ -122,7 +159,8 @@ def window_features(df_pre: pd.DataFrame, windows_s=WINDOWS_S, step_s: float = S
     """전처리된 샘플 표 → 윈도우 1행짜리 wide 피처 표.
 
     출력 컬럼: seg_uid, src, label, win_s, t_start(세그먼트 내 오프셋 s), t_abs(윈도우 시작 ts),
-    n_samples, 이어서 `<채널>_<피처>`(amp 18), `<채널>_shape_<피처>`(shape 9), cur_fit_*(sine 3), vib_corr01·cur_ac1·vib_rms_ratio(rel 3).
+    n_samples, 이어서 `<채널>_<피처>`(amp 18), `<채널>_shape_<피처>`(shape 9), cur_fit_*(sine 3), vib_corr01·cur_ac1·vib_rms_ratio(rel 3),
+    `groups`에 "relwin"을 넣은 경우에만 마지막에 RELWIN_KEYS 4열(vib_corr01_win·cur_ac1_win·vib_corr01_cum·cur_ac1_cum, 옵트인).
     `t_abs`는 시간 블록 분할용이며 모델 입력이 아니다.
     """
     d = add_seg_uid(df_pre)
@@ -150,6 +188,10 @@ def window_features(df_pre: pd.DataFrame, windows_s=WINDOWS_S, step_s: float = S
                     r0 = row[f"{SENSORS[0]}_rms"] if "amp" in groups else float(np.sqrt(np.mean(arrs[SENSORS[0]][s:s + win] ** 2)))
                     r1 = row[f"{SENSORS[1]}_rms"] if "amp" in groups else float(np.sqrt(np.mean(arrs[SENSORS[1]][s:s + win] ** 2)))
                     row["vib_rms_ratio"] = r0 / r1 if r1 > 0 else np.nan
+                if "relwin" in groups:
+                    a0, a1, ac_ = arrs[SENSORS[0]], arrs[SENSORS[1]], arrs[CUR_CHANNEL]
+                    row.update(window_relation_features(a0[s:s + win], a1[s:s + win], ac_[s:s + win]))
+                    row.update(cumulative_relation_features(a0, a1, ac_, s + win))
                 rows.append(row)
     return pd.DataFrame(rows)
 
