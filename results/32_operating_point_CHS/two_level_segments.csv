@@ -1,0 +1,35 @@
+seg_id,model,watch,alert,delay_watch_s,delay_alert_s,vib_grade,cur_grade
+1,pca_spe_amp18,True,True,0.9,0.9,확실 이상,경계
+2,pca_spe_amp18,True,True,0.9,0.9,확실 이상,경계
+3,pca_spe_amp18,True,True,0.9,0.9,정상 유사,경계
+4,pca_spe_amp18,True,True,0.9,1.4,확실 이상,경계
+6,pca_spe_amp18,True,True,0.9,0.9,확실 이상,경계
+7,pca_spe_amp18,True,True,0.9,0.9,확실 이상,경계
+8,pca_spe_amp18,True,True,0.9,1.9,확실 이상,경계
+11,pca_spe_amp18,True,True,0.9,0.9,확실 이상,경계
+12,pca_spe_amp18,True,True,0.9,0.9,확실 이상,정상 유사
+13,pca_spe_amp18,True,True,0.9,0.9,확실 이상,경계
+14,pca_spe_amp18,True,True,0.9,0.9,확실 이상,경계
+15,pca_spe_amp18,True,True,0.9,2.4,확실 이상,확실 이상
+16,pca_spe_amp18,True,True,0.9,0.9,확실 이상,확실 이상
+17,pca_spe_amp18,True,True,0.9,0.9,확실 이상,확실 이상
+18,pca_spe_amp18,True,True,0.9,0.9,확실 이상,확실 이상
+19,pca_spe_amp18,True,True,0.9,0.9,정상 유사,확실 이상
+20,pca_spe_amp18,True,True,0.9,1.4,정상 유사,확실 이상
+1,rule1_rms_ai0,True,True,0.9,0.9,확실 이상,경계
+2,rule1_rms_ai0,True,True,1.4,1.4,확실 이상,경계
+3,rule1_rms_ai0,False,False,,,정상 유사,경계
+4,rule1_rms_ai0,True,True,0.9,0.9,확실 이상,경계
+6,rule1_rms_ai0,True,True,0.9,0.9,확실 이상,경계
+7,rule1_rms_ai0,True,True,0.9,0.9,확실 이상,경계
+8,rule1_rms_ai0,True,True,1.9,1.9,확실 이상,경계
+11,rule1_rms_ai0,True,True,0.9,0.9,확실 이상,경계
+12,rule1_rms_ai0,True,True,0.9,0.9,확실 이상,정상 유사
+13,rule1_rms_ai0,True,True,0.9,0.9,확실 이상,경계
+14,rule1_rms_ai0,True,True,0.9,0.9,확실 이상,경계
+15,rule1_rms_ai0,True,True,3.4,3.4,확실 이상,확실 이상
+16,rule1_rms_ai0,True,True,0.9,0.9,확실 이상,확실 이상
+17,rule1_rms_ai0,True,True,0.9,0.9,확실 이상,확실 이상
+18,rule1_rms_ai0,True,True,0.9,0.9,확실 이상,확실 이상
+19,rule1_rms_ai0,False,False,,,정상 유사,확실 이상
+20,rule1_rms_ai0,False,False,,,정상 유사,확실 이상
