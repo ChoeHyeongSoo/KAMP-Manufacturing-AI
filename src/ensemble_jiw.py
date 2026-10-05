@@ -29,7 +29,9 @@ NB_SRC = {"cnn": ("24_model_forecasting_JIW", "cnn_deepant", M.CNNDeepAnT),
 MCD_SRC = ("26_model_distribution_JIW", "mcd_amp")
 ALL_MODELS = ["cnn", "lstm", "gat", "mcd"]
 STATE_CUR_RMS_BOUND = 125.2          # 21 노트북의 2-means 경계(정상 고부하 중앙값 157, 저부하 중앙값 86 사이)
-BURSTS_PER_HOUR = 3600.0 / ev.BURST_GAP_S
+# 시간당 환산: 평가 분모인 '2초 윈도우가 있는 정상 세그먼트' 452개가 정상 파일 관측 구간 76.93분(04·32 운영점 리포트) 동안 나왔다
+N_WINDOWED_NORMAL_SEG, NORMAL_SPAN_MIN = 452, 76.93
+SEG_PER_HOUR = N_WINDOWED_NORMAL_SEG / (NORMAL_SPAN_MIN / 60)   # 약 352.5 세그먼트/시간 (burst 간격 중앙값으로 환산한 452는 윈도우 없는 짧은 burst까지 센 값이라 과대)
 KEYS = ["split", "fold", "seed"]
 
 
@@ -184,7 +186,7 @@ def summary(cv: pd.DataFrame) -> pd.DataFrame:
     cols = ["auc", "fpr_sample", "fpr_segment", "fpr_high_load", "fpr_low_load", "recall_window", "n_detected", "n_out_seg",
             "delay_median_s", "inj_mean"] + sev_cols
     out = cv.groupby(["model", "split"], sort=False)[cols].mean()
-    out["fp_per_hour"] = out["fpr_segment"] * BURSTS_PER_HOUR
+    out["fp_per_hour"] = out["fpr_segment"] * SEG_PER_HOUR
     return out
 
 

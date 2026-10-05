@@ -1,0 +1,6 @@
+모델,파라미터 수
+CNN (DeepAnT 변형),7779
+LSTM-AD,13283
+MTAD-GAT,5828
+GDN,481
+DeepSVDD,3472
