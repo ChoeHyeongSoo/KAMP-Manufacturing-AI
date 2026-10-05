@@ -19,6 +19,7 @@ import paths
 
 REFUSE = "제공된 근거에 없습니다."
 RES28, RES32, RES33 = (paths.RESULTS / n for n in ("28_model_ensemble_JIW", "32_alarm_explain_JIW", "33_early_warning_JIW"))
+SEG_PER_HOUR = 452 / (76.93 / 60)   # 2초 윈도우가 있는 정상 세그먼트 452개 / 관측 76.93분 (ensemble_jiw.SEG_PER_HOUR와 같은 값)
 SPLIT_KO = {"group_kfold_seg": "group_kfold", "time_block": "time_block"}
 
 
@@ -32,7 +33,7 @@ def build_facts() -> dict[str, str]:
     cv = pd.read_csv(RES28 / "cv_scores.csv")
     g = cv.groupby(["model", "split"]).mean(numeric_only=True)
     pair = lambda m, col, f=lambda v: f"{v:.3g}": " / ".join(f(g.loc[(m, s), col]) for s in ("group_kfold_seg", "time_block"))
-    hour = lambda m: " / ".join(f"{g.loc[(m, s), 'fpr_segment'] * 452:.1f}" for s in ("group_kfold_seg", "time_block"))
+    hour = lambda m: " / ".join(f"{g.loc[(m, s), 'fpr_segment'] * SEG_PER_HOUR:.1f}" for s in ("group_kfold_seg", "time_block"))
     lead = pd.read_csv(RES33 / "summary.csv", index_col=[0, 1])
     fa = pd.read_csv(RES33 / "false_alerts.csv", index_col=0)
     eta = pd.read_csv(RES33 / "eta_errors.csv")
