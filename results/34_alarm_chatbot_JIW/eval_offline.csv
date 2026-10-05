@@ -1,0 +1,15 @@
+질문,종류,인용,필수 인용 충족,거절,근거 없는 숫자,단정 표현,통과
+경보랑 주의는 뭐가 달라?,answer,"F1,F2,F3,F4",True,False,0,0,True
+임계값은 어떻게 정해?,answer,"F1,F2,F3,F4",True,False,0,0,True
+오경보는 얼마나 자주 나?,answer,"F3,F4,F7,F9",True,False,0,0,True
+고부하에서 오경보가 왜 많아?,answer,"F3,F4,F7,F9",True,False,0,0,True
+약한 이상도 잡아?,answer,"F6,F16,F17",True,False,0,0,True
+조기경보는 몇 분 전에 울려?,answer,"F8,F11,F16",True,False,0,0,True
+미탐은 어떤 경우야?,answer,"F6,F16,F17",True,False,0,0,True
+어떻게 점검해야 해?,answer,"F14,F15",True,False,0,0,True
+이 결과를 얼마나 믿을 수 있어?,answer,"F12,F15,F16",True,False,0,0,True
+CNN 단독이랑 MCD 단독 비교해줘,answer,"F3,F4,F5",True,False,0,0,True
+몇 분 후에 경보가 울릴지 예측해줘,decline,"F8,F11,F16",True,False,0,0,True
+고장 원인이 모터 베어링이야?,decline,"F12,F13,F15",True,False,0,0,True
+내일 날씨 어때?,refuse,,True,True,0,0,True
+주식 추천해줘,refuse,,True,True,0,0,True
