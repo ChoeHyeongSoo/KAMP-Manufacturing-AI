@@ -5,13 +5,11 @@
 - 모든 답은 facts 번호([F3] 같은 인용)를 단다. facts에 없는 질문은 "제공된 근거에 없습니다"로 답한다.
 - 원인(모터인지 펌프인지, 어떤 부품인지)을 단정하지 않는다. 점검 권고는 [가정]이다.
 - 답에 들어 있는 숫자는 facts·선택한 카드에 있는 값이어야 한다(`verify_numbers`). 없으면 경고를 붙인다.
-- 백엔드 두 가지: `OfflineBackend`(키워드 라우팅 + 템플릿, 외부 호출 없음, 결정적, 기본)와 `LLMBackend`(외부 LLM API, 선택).
-  LLM 백엔드는 facts 요약 텍스트와 질문·대화 이력만 보낸다. 원 데이터·윈도우 점수는 보내지 않는다.
-  외부 API 사용 가능 여부는 대회 규정 확인이 먼저다. 기본은 오프라인이다.
+- 백엔드 두 가지: `OfflineBackend`(키워드 라우팅 + 템플릿, 결정적, 기본)와 `HFBackend`(오픈소스 소형 LLM을 **이 PC에서 직접** 실행).
+  둘 다 외부로 아무것도 보내지 않는다. HF 백엔드의 답이 숫자 검증·단정 표현 검사를 어기면 오프라인 답으로 대체한다.
 """
 from __future__ import annotations
 
-import os
 import re
 import sys
 
@@ -136,7 +134,7 @@ class OfflineBackend:
 
     def answer(self, question: str, history: list[dict], facts: dict[str, str], card: dict | None) -> str:
         q = question.lower()
-        if card and any(k in q for k in ("이 경보", "왜 울", "왜 경보", "이유", "이 카드", "지금 경보")):
+        if card and any(k in q for k in CARD_KEYS):
             return (f"선택한 경보의 근거 카드입니다.\n{card['text']}\n"
                     f"예측 오차가 몰린 신호는 '{card['where']}'이지만 이것이 원인 부위라는 뜻은 아닙니다 [F13][F15]. 점검 권고는 가정입니다 [F14].")
         for name, keys, ids in INTENTS:
@@ -158,30 +156,112 @@ SYSTEM_PROMPT = """당신은 프레스 유압펌프 이상탐지 결과를 설�
 6. 짧고 구체적으로 답합니다."""
 
 
-class LLMBackend:
-    """외부 LLM API 백엔드(선택). 환경 변수 PDM_LLM_MODEL(기본값은 아래 코드), 인증은 SDK 기본 경로.
-    facts 요약 텍스트와 대화 이력만 보낸다. 이 경로는 키가 필요해 노트북 실행에서는 시험하지 않았다(34번 §4)."""
-    name = "llm"
+FACT_TITLES = {
+    "F1": "경보·주의 규칙의 정의(CNN, MCD가 무엇을 보는지)", "F2": "임계값을 정하는 방법", "F3": "CNN 단독(주의 단계)의 오경보율·시간당 건수",
+    "F4": "경보 단계(CNN과 MCD 모두 초과)의 오경보율·미탐", "F5": "MCD 단독·OR 결합의 오경보율", "F6": "약한 이상을 얼마나 잡는지(합성 강도)",
+    "F7": "고부하·저부하 운전 상태별 오경보, 상태별 임계 결과", "F8": "조기경보 선행 시간(열화 완성 전에 알린 시간)", "F9": "정상 구간의 거짓 경보 사건 수",
+    "F10": "위험 상승 추세 규칙의 이득", "F11": "'몇 분 후 경보' 추정을 쓰지 않는 이유", "F12": "근거 카드가 맞는 채널을 가리키는지 검증",
+    "F13": "실제 이상에서 어느 신호가 크게 벗어났는지 분포", "F14": "점검 권고(무엇을 확인할지)", "F15": "센서 부착 위치·원인(모터/펌프) 구분 불가",
+    "F16": "한계와 신뢰도(이상 1건, 합성 평가)", "F17": "조용한 이상(3·19·20)과 전류 채널의 필요성",
+}
+DOMAIN_TERMS = ("경보", "알림", "알람", "울리", "이상", "센서", "전류", "진동", "오경보", "미탐", "모델", "점검", "펌프", "모터", "설비", "부하", "임계",
+                "기준", "분석", "신호", "현장", "예측", "통계", "탐지", "결과", "근거", "카드", "조기", "열화", "정상", "CNN", "MCD", "cnn", "mcd")   # 범위 밖 질문 게이트
+CARD_KEYS = ("이 경보", "왜 울", "왜 경보", "이유", "이 카드", "지금 경보")
+POLICY_INTENTS = ("cause_pin", "eta")   # 원인 단정·시점 예측 질문은 모델이 아니라 규칙이 답한다 (거절은 정책이라 모델에 맡기지 않는다)
 
-    def __init__(self, client=None, model: str | None = None):
-        if client is None:
-            import anthropic   # 선택 의존성: pip install anthropic
-            client = anthropic.Anthropic()
-        self.client = client
-        self.model = model or os.environ.get("PDM_LLM_MODEL", "claude-opus-5-5")
+
+def route(question: str, has_card: bool) -> tuple[str | None, list[str] | None]:
+    """질문 키워드로 (주제, 관련 facts 번호)를 고른다. 카드 질문은 ('card', 카드 관련 facts), 해당 없으면 (None, None)"""
+    q = question.lower()
+    if has_card and any(k in q for k in CARD_KEYS):
+        return "card", ["F13", "F14", "F15"]
+    for name, keys, ids in INTENTS:
+        if any(k in q for k in keys):
+            return name, list(ids)
+    return None, None
+
+
+HF_REPO = "Qwen/Qwen2.5-1.5B-Instruct"   # Apache-2.0, 파라미터 1.54B (BF16 약 3GB)
+MODEL_DIR = paths.MODELS / "34_alarm_chatbot_JIW" / "qwen2.5-1.5b-instruct"   # git 제외 폴더
+
+
+def download_model(dest=MODEL_DIR) -> str:
+    """허깅페이스에서 모델을 내려받는다(한 번만). 이후 실행은 로컬 파일만 쓴다."""
+    from huggingface_hub import snapshot_download
+    return snapshot_download(HF_REPO, local_dir=str(dest))
+
+
+class HFBackend:
+    """오픈소스 소형 LLM(transformers)을 로컬에서 실행한다. 외부 호출 없음, 탐욕 디코딩이라 같은 입력에는 같은 답.
+    입력은 질문과 관련된 facts만 골라 넣는다(작은 모델이 긴 근거에서 헤매지 않게)."""
+    name = "hf"
+
+    def __init__(self, model_dir=MODEL_DIR, max_new_tokens: int = 300, device: str | None = None, mode: str = "hybrid"):
+        """mode: 'hybrid'(기본) 키워드 규칙에 걸리면 규칙이, 안 걸리면 모델이 근거 번호를 고른다 / 'select' 모델이 항상 근거 번호만 고른다 /
+        'generate'(실험용) 모델이 문장을 새로 쓴다. 어느 모드든 select·hybrid의 답은 근거 문장 그대로다."""
+        import torch
+        self.mode = mode
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        dev = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.tok = AutoTokenizer.from_pretrained(str(model_dir))
+        self.model = AutoModelForCausalLM.from_pretrained(str(model_dir), dtype=torch.bfloat16 if dev == "cuda" else torch.float32).to(dev).eval()
+        self.dev, self.max_new_tokens = dev, max_new_tokens
+
+    def _generate(self, messages: list[dict], max_new_tokens: int) -> str:
+        import torch
+        text = self.tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        inputs = self.tok(text, return_tensors="pt").to(self.dev)
+        with torch.no_grad():
+            out = self.model.generate(**inputs, max_new_tokens=max_new_tokens, do_sample=False, repetition_penalty=1.05)
+        return self.tok.decode(out[0, inputs["input_ids"].shape[1]:], skip_special_tokens=True).strip()
+
+    def select_ids(self, question: str, facts: dict[str, str], variant: str = "v2", gate: bool = True) -> list[str]:
+        """모델이 질문에 필요한 근거 번호를 고른다(최대 4개, 없으면 빈 목록). 문장은 새로 쓰지 않는다.
+        v1: 번호 목록만 주고 고르게 함. v2: 도메인 단어 게이트(gate=True) + '조금이라도 관련 있으면 가장 가까운 번호를 고른다'는 지시와 예시 3개(평가 질문과 겹치지 않음)를 추가."""
+        if gate and variant == "v2" and not any(t in question for t in DOMAIN_TERMS):   # 도메인 단어가 하나도 없으면 모델을 부르지 않고 범위 밖 처리
+            return []
+        menu = "\n".join(f"{k}: {FACT_TITLES[k]}" for k in facts)
+        sys_msg = ("프레스 유압펌프 이상탐지 결과 설명 챗봇의 검색기입니다. 아래 근거 목록에서 질문에 답하는 데 필요한 번호만 골라 "
+                   "쉼표로 출력합니다(예: F3,F4). 관련된 근거가 없으면 NONE만 출력합니다. 다른 말은 쓰지 않습니다.\n\n" + menu)
+        shots: list[dict] = []
+        if variant == "v2":
+            sys_msg = sys_msg.replace("관련된 근거가 없으면 NONE만 출력합니다.",
+                                      "질문이 조금이라도 관련 있으면 가장 가까운 번호를 고르고, 완전히 무관한 질문(날씨, 음식 등)일 때만 NONE을 출력합니다.")
+            for q, a in [("설비 점검은 어디부터 하면 좋아?", "F14"), ("이 방법의 약점이 뭐야?", "F16"), ("내일 서울 날씨 알려줘", "NONE")]:
+                shots += [{"role": "user", "content": q}, {"role": "assistant", "content": a}]
+        raw = self._generate([{"role": "system", "content": sys_msg}] + shots + [{"role": "user", "content": question}], 24)
+        picked = [f"F{n}" for n in re.findall(r"F?(\d+)", raw) if f"F{int(n)}" in facts]
+        return list(dict.fromkeys(picked))[:4]
 
     def answer(self, question: str, history: list[dict], facts: dict[str, str], card: dict | None) -> str:
+        if card is not None and any(k in question for k in CARD_KEYS):   # 카드 설명은 템플릿(근거 카드 문장 그대로)
+            self.last_route = "rules"
+            return OfflineBackend().answer(question, history, facts, card)
+        intent, _ = route(question, False)
+        if intent in POLICY_INTENTS:   # 원인 단정·시점 예측 질문은 모델이 아니라 규칙이 답한다(거절은 정책이다)
+            self.last_route = "rules"
+            return OfflineBackend().answer(question, history, facts, card)
+        if self.mode == "hybrid" and intent is not None:   # 규칙이 확실히 아는 질문은 규칙이 답한다
+            self.last_route = "rules"
+            return OfflineBackend().answer(question, history, facts, card)
+        if self.mode in ("select", "hybrid"):   # 모델은 근거 번호만 고르고, 답은 근거 문장 그대로
+            ids = self.select_ids(question, facts)
+            self.last_route = "model"
+            if not ids:
+                return f"{REFUSE} 다룰 수 있는 주제: 경보 규칙, 오경보, 미탐, 조기경보, 점검 권고, 한계."
+            return "근거 요약입니다.\n" + "\n".join(f"- {facts[i]} [{i}]" for i in ids)
+        if intent is None:   # generate 모드(실험용): 근거 밖 질문은 규칙이 거절
+            self.last_route = "rules"
+            return OfflineBackend().answer(question, history, facts, card)
+        ids = route(question, False)[1]
+        self.last_route = "model"
+        sub = {k: facts[k] for k in dict.fromkeys(ids + ["F16"])}   # 한계(F16)는 항상 포함
         card_txt = card["text"] if card else "(선택한 경보 없음)"
-        system = f"{SYSTEM_PROMPT}\n\n[FACTS]\n{facts_text(facts)}\n\n[CARD]\n{card_txt}"
-        messages = history + [{"role": "user", "content": question}]
-        resp = self.client.beta.messages.create(
-            model=self.model, max_tokens=4000, system=system, messages=messages,
-            output_config={"effort": "low"},
-            betas=["server-side-fallback-2026-07-01"], fallbacks="default",
-        )
-        if resp.stop_reason == "refusal":
-            return f"모델이 이 질문에 답하지 않았습니다. {REFUSE}"
-        return next((b.text for b in resp.content if b.type == "text"), REFUSE)
+        system = f"{SYSTEM_PROMPT}\n\n[FACTS]\n{facts_text(sub)}\n\n[CARD]\n{card_txt}"
+        messages = [{"role": "system", "content": system}] + history[-4:] + [{"role": "user", "content": question}]
+        ans = self._generate(messages, self.max_new_tokens)
+        # 작은 모델은 인용 표기를 빼먹는다. 모델에 넣어 준 facts 번호를 '참고한 근거'로 덧붙인다(모델이 실제로 인용한 것은 아니다)
+        return ans + "\n참고한 근거: " + "".join(f"[{k}]" for k in sub)
 
 
 # ------------------------------------------------------------------ 세션
@@ -200,19 +280,25 @@ class ChatSession:
 
     def ask(self, question: str) -> dict:
         allowed = facts_text(self.facts) + "\n" + (self.card["text"] if self.card else "")
+        offline = OfflineBackend()
         try:
             ans = self.backend.answer(question, self.history, self.facts, self.card)
-        except Exception as e:   # 외부 호출 실패 시 오프라인으로 대체(오류 종류만 알린다)
-            ans = f"({self.backend.name} 백엔드 오류 {type(e).__name__}, 오프라인 답으로 대체)\n" + OfflineBackend().answer(question, self.history, self.facts, self.card)
-        bad = verify_numbers(ans, allowed)
-        unsafe = unsafe_claims(ans)
-        cited = sorted(set(re.findall(r"\[(F\d+)\]", ans)), key=lambda s: int(s[1:]))
-        if bad:
+        except Exception as e:   # 모델 실행 실패 시 오프라인으로 대체(오류 종류만 알린다)
+            ans = f"({self.backend.name} 백엔드 오류 {type(e).__name__}, 오프라인 답으로 대체)\n" + offline.answer(question, self.history, self.facts, self.card)
+        bad, unsafe = verify_numbers(ans, allowed), unsafe_claims(ans)
+        raw = ans
+        # 비오프라인 백엔드의 답이 검사를 어기면 오프라인 답으로 대체한다. 오프라인 답은 facts 문장 그대로라 검사를 통과한다.
+        fallback = bool((bad or unsafe) and self.backend.name != "offline")
+        if fallback:
+            ans = "(모델 답이 근거 검사를 통과하지 못해 근거 문장으로 대체)\n" + offline.answer(question, self.history, self.facts, self.card)
+        elif bad:
             ans += f"\n⚠ 근거에서 확인되지 않는 숫자: {', '.join(bad)}"
-        if unsafe:
+        elif unsafe:
             ans += f"\n⚠ 원인·시점을 단정하는 표현이 있습니다: {', '.join(unsafe)}"
+        cited = sorted(set(re.findall(r"\[(F\d+)\]", ans)), key=lambda s: int(s[1:]))
         self.history += [{"role": "user", "content": question}, {"role": "assistant", "content": ans}]
-        return {"question": question, "answer": ans, "cited": cited, "unsupported_numbers": bad, "unsafe_claims": unsafe,
+        return {"question": question, "answer": ans, "cited": cited, "raw_answer": raw, "violation": bool(bad or unsafe), "fallback": fallback,
+                "unsupported_numbers": [] if fallback else bad, "unsafe_claims": [] if fallback else unsafe,
                 "refused": ans.startswith(REFUSE) or REFUSE in ans.splitlines()[0]}
 
 
@@ -245,13 +331,13 @@ def evaluate(backend, facts=None, cards=None) -> pd.DataFrame:
         if kind == "decline":
             ok = ok_cite and any(k in r["answer"] for k in ("구분할 수 없", "말할 수 없", "쓰지 않"))
         rows.append({"질문": q, "종류": kind, "인용": ",".join(r["cited"]), "필수 인용 충족": ok_cite, "거절": r["refused"],
-                     "근거 없는 숫자": len(r["unsupported_numbers"]), "단정 표현": len(r["unsafe_claims"]),
-                     "통과": ok and not r["unsupported_numbers"] and not r["unsafe_claims"]})
+                     "모델 답 위반": r["violation"], "근거 문장으로 대체": r["fallback"],
+                     "통과": ok and not r["unsupported_numbers"] and not r["unsafe_claims"], "답": r["answer"], "모델 원답": r["raw_answer"]})
     return pd.DataFrame(rows)
 
 
-if __name__ == "__main__":   # python src/chatbot_jiw.py [--llm]
-    sess = ChatSession(LLMBackend() if "--llm" in sys.argv else OfflineBackend())
+if __name__ == "__main__":   # python src/chatbot_jiw.py [--hf]  (--hf는 먼저 download_model()로 모델을 받아 둔 경우)
+    sess = ChatSession(HFBackend() if "--hf" in sys.argv else OfflineBackend())
     print(f"백엔드: {sess.backend.name}. '/card N'으로 경보 카드 선택(0~{len(sess.cards) - 1}), 빈 줄이면 종료.")
     while (q := input("질문> ").strip()):
         if q.startswith("/card"):
@@ -259,3 +345,36 @@ if __name__ == "__main__":   # python src/chatbot_jiw.py [--llm]
             print(c["text"])
             continue
         print(sess.ask(q)["answer"])
+
+
+# ------------------------------------------------------------------ 근거 선택(라우팅) 평가: 키워드 라우터 vs 모델
+PARAPHRASES = [   # (질문, 기대 근거 번호 집합 — 비어 있으면 범위 밖). 라우터 키워드를 일부러 피한 표현이다.
+    ("어떤 상황에서 알림이 울리는지 알려줘", {"F1"}),
+    ("기준값은 뭘 보고 잡은 거야?", {"F2"}),
+    ("정상인데 잘못 울리는 비율이 어느 정도야?", {"F3", "F4"}),
+    ("부하가 큰 때에 알람이 더 잘못 울리는 이유가 뭐야?", {"F7"}),
+    ("미미한 이상 징후도 검출돼?", {"F6"}),
+    ("이상이 생기기 전에 얼마나 먼저 알려줘?", {"F8"}),
+    ("센서 3개 중에 전류가 꼭 필요해?", {"F17"}),
+    ("알림이 울리면 현장에서 뭘 확인하면 돼?", {"F14"}),
+    ("이 분석을 그대로 믿어도 되는 거야?", {"F16"}),
+    ("신호 3개 중 어디서 문제가 제일 자주 보였어?", {"F13"}),
+    ("예측 모델이랑 통계 모델을 같이 쓰는 이유가 뭐야?", {"F1", "F4", "F5"}),
+    ("모터가 문제인지 펌프가 문제인지 알 수 있어?", {"F15"}),
+    ("알림이 시간당 몇 번 정도 오는 거야?", {"F3", "F4", "F9"}),
+    ("설명이 가리키는 센서가 맞는지 확인했어?", {"F12"}),
+    ("점심 메뉴 추천해줘", set()),
+    ("파이썬에서 리스트 정렬하는 방법 알려줘", set()),
+    ("오늘 환율이 얼마야?", set()),
+]
+
+
+def evaluate_routing(select_fn) -> pd.DataFrame:
+    """select_fn(질문) -> 고른 근거 번호 목록. 적중 = 기대 번호 중 하나라도 고름(범위 밖은 아무것도 안 고르면 적중)"""
+    rows = []
+    for q, exp in PARAPHRASES:
+        got = list(select_fn(q))
+        hit = (not got) if not exp else bool(set(got) & exp)
+        prec = (len(set(got) & exp) / len(got)) if got and exp else (1.0 if not got and not exp else 0.0)
+        rows.append({"질문": q, "범위": "안" if exp else "밖", "기대": ",".join(sorted(exp)), "선택": ",".join(got), "적중": hit, "정밀도": prec})
+    return pd.DataFrame(rows)
