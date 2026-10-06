@@ -43,10 +43,29 @@ notebook,model,split,win_s,missed,n_전 채널 조용,n_기타,판정 불가(분
 26_model_distribution_JIW,ocsvm_amp_shape_w2s,group_kfold_seg,2.0,,0,0,4
 26_model_distribution_JIW,ocsvm_amp_rel_w2s,group_kfold_seg,2.0,,0,0,4
 27_model_cnn_lstm_ae_CHS,pca_raw_ae_all3_w2s,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,cnn,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,lstm,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,gat,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,cnn&mcd,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,lstm&mcd,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,gat&mcd,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,cnn&lstm,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,cnn|mcd,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,lstm|mcd,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,gat|mcd,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,cnn [상태별],group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,cnn|mcd [상태별],group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,cnn|mcd [2/3],group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,cnn|mcd [3/5],group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,cnn&mcd [2/3],group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,cnn&mcd [3/5],group_kfold_seg,2.0,,0,0,4
 25_model_graph_JIW,gdn_w2s,group_kfold_seg,2.0,,0,0,4
 26_model_distribution_JIW,mcd_amp_rel_w2s,group_kfold_seg,2.0,,0,0,4
 26_model_distribution_JIW,copod_amp_sine_w2s,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,cnn&mcd [상태별],group_kfold_seg,2.0,,0,0,4
 26_model_distribution_JIW,mcd_amp_w2s,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,mcd,group_kfold_seg,2.0,,0,0,4
+28_model_ensemble_JIW,mcd [상태별],group_kfold_seg,2.0,,0,0,4
 26_model_distribution_JIW,copod_amp_rel_w2s,group_kfold_seg,2.0,,0,0,4
 26_model_distribution_JIW,copod_amp_shape_w2s,group_kfold_seg,2.0,,0,0,4
 26_model_distribution_JIW,hbos_amp_sine_w2s,group_kfold_seg,2.0,,0,0,4
@@ -113,8 +132,27 @@ notebook,model,split,win_s,missed,n_전 채널 조용,n_기타,판정 불가(분
 26_model_distribution_JIW,ocsvm_amp_shape_w2s,time_block,2.0,,0,0,4
 26_model_distribution_JIW,ocsvm_amp_rel_w2s,time_block,2.0,,0,0,4
 27_model_cnn_lstm_ae_CHS,pca_raw_ae_all3_w2s,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,cnn,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,lstm,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,cnn&mcd,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,lstm&mcd,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,gat&mcd,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,cnn&lstm,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,cnn|mcd,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,lstm|mcd,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,gat|mcd,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,cnn [상태별],time_block,2.0,,0,0,4
+28_model_ensemble_JIW,cnn&mcd [상태별],time_block,2.0,,0,0,4
+28_model_ensemble_JIW,cnn|mcd [상태별],time_block,2.0,,0,0,4
+28_model_ensemble_JIW,cnn|mcd [2/3],time_block,2.0,,0,0,4
+28_model_ensemble_JIW,cnn|mcd [3/5],time_block,2.0,,0,0,4
+28_model_ensemble_JIW,cnn&mcd [2/3],time_block,2.0,,0,0,4
+28_model_ensemble_JIW,cnn&mcd [3/5],time_block,2.0,,0,0,4
 26_model_distribution_JIW,mcd_amp_w2s,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,mcd,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,mcd [상태별],time_block,2.0,,0,0,4
 25_model_graph_JIW,mtad_gat_w2s,time_block,2.0,,0,0,4
+28_model_ensemble_JIW,gat,time_block,2.0,,0,0,4
 26_model_distribution_JIW,mcd_amp_rel_w2s,time_block,2.0,,0,0,4
 26_model_distribution_JIW,hbos_amp_sine_w2s,time_block,2.0,,0,0,4
 26_model_distribution_JIW,copod_amp_sine_w2s,time_block,2.0,,0,0,4
