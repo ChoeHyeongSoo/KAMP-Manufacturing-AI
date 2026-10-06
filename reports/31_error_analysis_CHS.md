@@ -1,7 +1,7 @@
 # 주제 ③ 프레스 유압펌프 — 모델 비교표 및 FN·FP 오류분석 리포트 (31_error_analysis_CHS)
 
 - 노트북: `notebooks/31_error_analysis_CHS.ipynb` (실행 결과 포함, 에러 셀 0)
-- 목적: 모델 노트북(21·22·24·25·26·27·28·29)의 `metrics.csv`를 모아 비교표를 만들고, 미탐(FN)·오경보(FP)가 몰리는 조건과 그 원인(상관 구조 변화, 정상 부분공간 이탈, 분포 형태 차이)을 정리한다.
+- 목적: 모델 노트북(21·22·23·24·25·26·27·28·29)의 `metrics.csv`를 모아 비교표를 만들고, 미탐(FN)·오경보(FP)가 몰리는 조건과 그 원인(상관 구조 변화, 정상 부분공간 이탈, 분포 형태 차이)을 정리한다.
 - 심사 기준 대응: 2번(모델 비교표), 3번(FN/FP 집중 조건), 4번(상태별 경보 운영 근거), 5번(라벨 노이즈·단변량 규칙 한계 관점의 FN 해석)
 - 탐지 대상 표현: 유압펌프 모터-펌프 구동부 이상(센서 부착 부위를 확정할 수 없어 원인이 모터인지 펌프인지는 데이터로 구분하지 않는다).
 - 근거 수준 표기: **[데이터]** 이 리포트의 CSV·노트북 출력으로 직접 확인 / **[추정]** 데이터에서 논리적으로 따라오나 직접 검증하지 않음 / **[가정]** 현장·운영 전제.
@@ -9,10 +9,11 @@
 
 | 절 | 핵심 결과 | 출처 |
 |---|---|---|
-| A 비교표 | 평균 행 192행(규칙 7종 + 모델 27종 + 22 고전 4종 + 29 가이드북 1종 + 28 결합 19종), 2초 gkf F1 cnn&mcd 0.9630 / cnn|mcd 0.4756, 1초 gkf AUC 0.9998 이상 10개 모델(22 ridge_var 1.0000 포함), 규칙 베이스라인 0.7840~0.8696 | `results/model_comparison.csv` |
-| A-2 F1 | gkf 1초 세그먼트 F1(any·q 0.99·5 fold 합산) 최고 copod_amp_sine 0.7083(fp 14, `_sine` 계열)·진폭 전용 최고 mtad_gat 0.6892, 규칙 7종 0.5000~0.5957(rule1 0.5385), 최저 cnn_lstm_ae_all3_zwin 0.3036. time_block(블록 평균) 최고 copod_amp_sine 0.9201(진폭 전용 최고 lstm_ad 0.9102) | `results/model_comparison.csv`(f1), `segment_f1_by_fold.csv` |
+| A 비교표 | 평균 행 202행(규칙 7종 + 모델 27종 + 22 고전 4종 + 29 가이드북 1종 + 28 결합 19종 + 23 결합 5종), 2초 gkf F1 cnn&mcd 0.9630 / cnn|mcd 0.4756, 1초 gkf F1 23 ridge&mcd 1.0000(fp 0), 1초 gkf AUC 0.9998 이상 13개 모델(22 ridge_var, 23 ridge_diff·ridge\|mcd·ridge+mcd[cal] 1.0000 포함), 규칙 베이스라인 0.7840~0.8696 | `results/model_comparison.csv` |
+| A-2 F1 | gkf 1초 세그먼트 F1(any·q 0.99·5 fold 합산) 최고 23 ridge&mcd 1.0000(fp 0·fn 0, 결합 규칙), 단독 모델은 ridge_diff 0.7556(fp 11, 1차 차분 입력)·copod_amp_sine 0.7083(fp 14, `_sine` 계열)·ridge_var 0.6939·mtad_gat 0.6892, 규칙 7종 0.5000~0.5957(rule1 0.5385), 최저 cnn_lstm_ae_all3_zwin 0.3036. time_block(블록 평균) 최고 ridge&mcd 0.9929, 단독 모델은 ridge_var 0.9583·ridge_diff 0.9523 | `results/model_comparison.csv`(f1), `segment_f1_by_fold.csv` |
 | A-3 민감도 | q를 올리면 any는 fp만 줄어 F1 상승(rule1 gkf 0.5385→0.7778, pca_spe_amp18 0.5231→0.9189), pca_spe_amp18의 kofn·quantile은 fn이 늘어(2→4, 0→3) 정점이 중간 q, rule1 kofn은 fn 4로 일정해 단조 상승 | `f1_sensitivity_grid.csv`(f1·fp·fn) |
 | A-4 오경보율 정렬 | 오경보율을 0.02·0.04로 맞추면 8개 비교(같은 이벤트 안의 조건, 최소 차이 0.009) 모두 any가 kofn·skip1보다 F1이 높다(pca_spe_amp18 gkf 0.02: 0.7234 vs 0.7143 vs 0.6667), 지연 0.9초 vs 1.4초 | `f1_matched_fpr.csv`(f1·recall·delay_median_s) |
+| A-5 최종 경보 구조 | 28(CNN+MCD, 2초)과 23(Ridge+MCD, 1초)을 공통 세그먼트(정상 452·이상 13)에서 다시 세면 주의 오경보율 gkf 0.0280 vs 0.0221, 경보 0.0022 vs 0.0000, 이상 13/13 모두 탐지. 오경보율 차이의 95% 구간 4개가 모두 0을 포함. 지연 1.9초 vs 0.9초, 23은 정상 78·이상 4 세그먼트를 추가로 판정 | `final_alarm_28_vs_23.csv`, `final_alarm_28_vs_23_bootstrap.csv`, `final_alarm_28_vs_23_fp_overlap.csv` |
 | B FN 이원화 | 규칙 7종(causal 변형 rule3e 포함)과 진동 2채널 AE는 3·19·20 미탐, 전류 입력 모델은 모두 탐지, copod·hbos 계열·deep_svdd만 19를 놓침 | `results/31_error_analysis_CHS/fn_by_model.csv`, `fn_category_summary.csv` |
 | C FP 집중 | 32모델 중 23개가 고부하에 FP 집중, 윈도우 z-score 입력만 저부하로 반전, 04 의심 세그먼트와 겹침이 큼 | `fp_by_state.csv`, `fp_by_block.csv`, `fp_common_segments.csv` |
 | D 상관 구조 | \|Δρ\|≥0.5인 쌍 93/465(31열, relwin 4열 포함), 핵심은 채널 관계 반전이며 causal 누적 상관에서도 재현 | `corr_break_normal_vs_outlier.csv` |
@@ -25,18 +26,19 @@
 
 ## 1. A. 모델 비교표
 
-**방법.** `results/*/metrics.csv`(21·22·24·25·26·27·28·29) 1,056행을 합친 뒤 fold 평균 행만 모아 `results/model_comparison.csv`(192행)를 만들었다. 분할×윈도우별 행 수는 group_kfold_seg(gkf)·time_block 모두 1초 39 / 2초 50 / 3초 7(3초는 규칙 7종만, 28 결합 19종은 2초만, 22 고전 4종은 1초만, 29 가이드북은 1·2초). 21의 rule3e(rule3c의 causal 변형, `vib_corr01_cum`)가 새로 들어갔다. 27은 error_cases를 전 시드 저장하므로 B·C에서는 `seed` 열로 첫 시드만 쓴다. [데이터: 노트북 셀 5 출력, `model_comparison.csv`]
+**방법.** `results/2*/metrics.csv`(21·22·23·24·25·26·27·28·29) 1,111행을 합친 뒤 fold 평균 행만 모아 `results/model_comparison.csv`(202행)를 만들었다. 분할×윈도우별 행 수는 group_kfold_seg(gkf)·time_block 모두 1초 44 / 2초 50 / 3초 7(3초는 규칙 7종만, 28 결합 19종은 2초만, 22 고전 4종·23 결합 5종은 1초만, 29 가이드북은 1·2초). 23 `metrics.csv`에는 `win_s`·`n_out_seg`·`n_detected` 열이 없어 같은 폴더 `cv_scores.csv`의 시드 평균으로 채웠고(`fpr_segment` 시드 평균이 `metrics.csv`와 같음을 assert), `win_s`는 1초로 넣었다. 34(Ridge-VAR 입력 변형 3종)는 채택 입력 first_difference가 23 ridge_diff와 11행 모두 같아 비교표에 넣지 않았다(이 때문에 읽는 범위를 모델 번호 대역 `2*`로 좁혔다). 21의 rule3e(rule3c의 causal 변형, `vib_corr01_cum`)가 새로 들어갔다. 27은 error_cases를 전 시드 저장하므로 B·C에서는 `seed` 열로 첫 시드만 쓴다. [데이터: 노트북 셀 5 출력, `model_comparison.csv`]
 
 **발견.**
 - gkf 1초 AUC / fpr_segment 상위: mcd_amp_sine 1.0000 / 0.0546, ocsvm_amp_sine 1.0000 / 0.0896, cnn_lstm_ae_cur1 1.0000 / 0.0666, cnn_lstm_ae_all3_res 1.0000 / 0.0979, cnn_deepant 0.9999 / 0.0317, gdn 0.9999 / 0.0426, mtad_gat 0.9999 / 0.0286, ocsvm_amp_rel 0.9999 / 0.1106, lstm_ad 0.9998 / 0.0349. [데이터: `model_comparison.csv`]
 - 27 원시 신호 복원 계열: pca_raw_ae_all3 0.9995 / 0.0413, cnn_lstm_ae_all3_zwin 0.9994 / 0.1482, cnn_lstm_ae_all3 0.9927 / 0.0765, cnn_lstm_ae_vib2 0.9556 / 0.0750. 진동 2채널만 쓴 vib2가 가장 낮고 전류 1채널(cur1)이 1.0000이다. [데이터]
 - 진폭 전용(접미사 없음) 분포 모델은 mcd_amp 0.9842 / 0.0451, ocsvm_amp 0.9951 / 0.0726, copod_amp 0.9751 / 0.0394, hbos_amp 0.9695 / 0.0547, deep_svdd 0.9359 / 0.0914. [데이터]
 - 규칙 베이스라인(gkf 1초 AUC / fpr_segment): rule3 0.8696 / 0.0358, rule3c 0.8671 / 0.0303, rule3b 0.8058 / 0.0399, rule2 0.7996 / 0.0468, rule1 0.7864 / 0.0395, rule3d 0.7840 / 0.0419. time_block에서는 rule3c가 0.8841 / 0.0162로 규칙 중 최고다. [데이터]
-- 세그먼트 오경보율 최저(fn 0인 모델 기준)는 copod_amp_sine 0.0264, ridge_var 0.0280, mtad_gat 0.0286, rule3c 0.0303, cnn_deepant 0.0317, 최고는 cnn_lstm_ae_all3_zwin 0.1482, ocsvm_amp_rel 0.1106. AUC가 거의 같아도 오경보율은 5배 가까이 벌어진다. [데이터]
+- 세그먼트 오경보율 최저(fn 0인 모델 기준)는 23 결합 ridge&mcd 0.0000, 단독 모델은 ridge_diff 0.0206, copod_amp_sine 0.0264, ridge_var 0.0280, mtad_gat 0.0286, rule3c 0.0303, cnn_deepant 0.0317, 최고는 cnn_lstm_ae_all3_zwin 0.1482, ocsvm_amp_rel 0.1106. AUC가 거의 같아도 오경보율은 5배 가까이 벌어진다. [데이터]
 - time_block 1초에서는 ocsvm_amp_rel fpr_segment가 0.2429로 gkf(0.1106)보다 크게 나빠진다. cnn_deepant는 AUC 0.9999 / 0.0387로 유지된다. [데이터]
 - 3초 윈도우는 규칙 7종만 있다(gkf AUC rule3 0.9496 ~ rule3d 0.8932, rule3e 0.9272). [데이터]
-- 22 고전 시계열·트리(1초, 원 신호 입력이라 진폭 전용 묶음): ridge_var gkf 1.0000 / 0.0280, time_block 1.0000 / **0.0145**(1초 비규칙 모델 중 time_block 오경보율 최저, 17/17 탐지). naive_persistence 0.8221 / 0.0434, kalman_innovation 0.9040 / 0.0317, iforest_amp 0.9878 / 0.0446(time_block 0.0925). 29 가이드북 LSTM-AE(팀 계약 적용): 1초 gkf 0.8632 / 0.0130, time_block 0.7413 / 0.0240, 2초 0.9218 / 0.0354 — 오경보율이 낮은 것은 탐지도 적기 때문이다(1초 gkf fn 6, time_block fn 8.25; 1-2절). [데이터: `model_comparison.csv`, `reports/22_*`, `reports/29_*`]
+- 22 고전 시계열·트리(1초, 원 신호 입력이라 진폭 전용 묶음): ridge_var gkf 1.0000 / 0.0280, time_block 1.0000 / **0.0145**(1초 비규칙 단독 모델 중 time_block 오경보율 최저, 17/17 탐지). naive_persistence 0.8221 / 0.0434, kalman_innovation 0.9040 / 0.0317, iforest_amp 0.9878 / 0.0446(time_block 0.0925). 29 가이드북 LSTM-AE(팀 계약 적용): 1초 gkf 0.8632 / 0.0130, time_block 0.7413 / 0.0240, 2초 0.9218 / 0.0354 — 오경보율이 낮은 것은 탐지도 적기 때문이다(1초 gkf fn 6, time_block fn 8.25; 1-2절). [데이터: `model_comparison.csv`, `reports/22_*`, `reports/29_*`]
 - 28 결합(2초, 19행 × 2 split; 모델명에 `&`=AND, `|`=OR, `[2/3]`·`[3/5]`=k-of-n, `[상태별]`=상태별 q99)은 `cnn`·`mcd`가 24 `cnn_deepant_w2s`·26 `mcd_amp_w2s`와 같은 가중치라 fpr_segment·F1이 일치한다(gkf 0.0285/0.6724, 0.0378/0.6047). 2초 gkf F1은 cnn&mcd 0.9630(fp 1·fn 0), lstm&mcd 0.9873, gat&mcd 1.0000(fp 0), cnn|mcd 0.4756(fp 28.67), cnn&mcd [2/3] 0.9600(fn 1), [3/5] 0.8696(fn 3); time_block cnn&mcd 0.9968. k-of-n·상태별 행의 F1은 28의 해당 규칙 조건이며 any·q 0.99 대표 조건이 아니다. 28 `error_cases.csv`는 `model_id` 대신 `rule` 열이라 B·C(FN·FP 세그먼트 분석)에서는 제외했다. [데이터: `model_comparison.csv`, `reports/28_model_ensemble_JIW.md`]
+- 23 결합(1초, 1차 차분 입력, 5행 × 2 split; MCD 시드 3개 평균): ridge_diff gkf 1.0000 / 0.0206(F1 0.7556, fp 11), time_block 1.0000 / 0.0170(F1 0.9523). mcd_diff_amp 0.9917 / 0.0429, time_block 0.9968 / 0.0863. ridge&mcd gkf 0.9954 / **0.0000**(F1 1.0000, fp 0·fn 0), time_block 0.9991 / 0.0025(F1 0.9929, 블록 min–max 0.9714–1.0000). ridge|mcd 1.0000 / 0.0635, ridge+mcd[cal] 1.0000 / 0.0338. 5개 모두 17/17 탐지다. 입력이 표준 전처리(세그먼트 평균 제거)가 아니라 1차 차분이라 22 ridge_var(0.0280 / 0.0145)와는 입력만 다른 같은 모델이다. 23 `error_cases.csv`도 `model_id` 열이 없어 28과 같이 B·C에서는 제외했다(미탐 0이라 B 결론에는 영향 없음). 28과의 비교는 1-5절. [데이터: `model_comparison.csv`, `reports/23_model_ensemble_ridge_mcd_JSC.md`]
 - rule3c의 causal 변형 rule3e는 1초 gkf AUC 0.8435 / fpr_segment 0.0323, time_block 0.8841 → 0.8502 / 0.0162 → 0.0141로, 세그먼트 브로드캐스트 상관이 주던 순위 이득의 약 1/3이 미래 정보였음을 보인다(21 §7). [데이터]
 - **`_sine`·`_rel` 접미사 모델은 입력에 세그먼트 단위 브로드캐스트 피처(전류 사인 적합, 방향·비율 피처)가 들어간다.** 03에서 사인 잔차 피처의 세그먼트 단위 AUC가 1.000으로 나왔고(`reports/03_diagnosis_recheck_CHS.md`), 이 값은 날짜 교란 가능성과 분리되지 않는다. 따라서 `_sine`·`_rel` 결과는 진폭 전용 결과(cnn_deepant·lstm_ad·mtad_gat·gdn 및 접미사 없는 분포 모델)와 분리해 읽는다. [추정: 교란 여부는 별도 ablation 필요]
 
@@ -49,7 +51,7 @@
 **방법.** 평가 목표 지표인 세그먼트 단위 F1(`src/evaluate.py`)을 `model_comparison.csv`에 열로 추가했다(`tp, fp, fn, tn, n_normal, n_outlier, precision, recall, f1, fn_all, f1_all, f1_agg, f1_block_min, f1_block_max`). 대표 조건은 사전에 고정한 한 조합이다: 집계 규칙 any, 임계 train 정상 q 0.99, skip_first 0. 모델 노트북의 fold 행(`n_detected`, `n_out_seg`, `fpr_segment`)에서 `tp = n_detected`, `fn = n_out_seg − n_detected`, `fp = fpr_segment × n_normal`로 혼동행렬을 재구성한다. 분모 n_normal은 윈도우가 1개 이상인 정상 세그먼트 수로 split·fold·win_s마다 다르다(1초 gkf fold 0~4: 109·104·102·110·105, time_block 평가 블록 1~4: 102·99·108·108, parquet과 일치 확인; 블록 0은 train 전용). gkf는 5 fold를 합산(micro)하고 time_block은 이상 전체가 블록마다 반복되므로 블록별(1~4) 계산 후 4블록 평균을 쓴다. 24~27은 시드 평균이라 tp·fp가 소수다. [데이터: `segment_f1_by_fold.csv`, `model_comparison.csv`]
 
 **발견.**
-- gkf 1초 F1 상위: copod_amp_sine 0.7083(fp 14·fn 0, `_sine` 계열 — 1절의 날짜 교란 가능성 적용), 진폭 전용 최고 ridge_var 0.6939(fp 15·fn 0, 22), mtad_gat 0.6892(fp 15.33), cnn_deepant 0.6667(fp 17), lstm_ad 0.6456(fp 18.67), copod_amp_shape 0.6154(fp 19·fn 1), pca_raw_ae_all3 0.6071(fp 22), gdn 0.6000(fp 22.67). 하위: deep_svdd 0.4000, cnn_lstm_ae_all3_res 0.3953(fp 52), cnn_lstm_ae_vib2 0.3944(fp 40·fn 3), ocsvm_amp_rel 0.3656(fp 59), cnn_lstm_ae_all3_zwin 0.3036(fp 78). 39개 중 20개가 fn 0이다. 22의 kalman_innovation 0.6122(fp 17·fn 2)·naive_persistence 0.5455(fn 2)·iforest_amp 0.5614(fn 1), 29 lstm_ae_guidebook 0.6286(fp 7·fn 6)은 fp가 적어도 fn 때문에 중위권이다. [데이터: `model_comparison.csv`의 f1·fp·fn]
+- gkf 1초 F1 상위: 23 ridge&mcd 1.0000(fp 0·fn 0, 결합 규칙), ridge_diff 0.7556(fp 11·fn 0, 1차 차분 입력), copod_amp_sine 0.7083(fp 14·fn 0, `_sine` 계열 — 1절의 날짜 교란 가능성 적용), 표준 전처리 진폭 전용 최고 ridge_var 0.6939(fp 15·fn 0, 22), mtad_gat 0.6892(fp 15.33), cnn_deepant 0.6667(fp 17), lstm_ad 0.6456(fp 18.67), copod_amp_shape 0.6154(fp 19·fn 1), pca_raw_ae_all3 0.6071(fp 22), gdn 0.6000(fp 22.67). 하위: deep_svdd 0.4000, cnn_lstm_ae_all3_res 0.3953(fp 52), cnn_lstm_ae_vib2 0.3944(fp 40·fn 3), ocsvm_amp_rel 0.3656(fp 59), cnn_lstm_ae_all3_zwin 0.3036(fp 78). 44개 중 25개가 fn 0이다. 22의 kalman_innovation 0.6122(fp 17·fn 2)·naive_persistence 0.5455(fn 2)·iforest_amp 0.5614(fn 1), 29 lstm_ae_guidebook 0.6286(fp 7·fn 6)은 fp가 적어도 fn 때문에 중위권이다. [데이터: `model_comparison.csv`의 f1·fp·fn]
 - 규칙 7종 gkf 1초 F1은 rule3c 0.5957(fp 16), rule3e 0.5833(fp 17), rule3 0.5600(fp 19), rule3b·rule1 0.5385(fp 21), rule3d 0.5283(fp 22), rule2 0.5000(fp 25)이고 모두 tp 14·fn 3이다. rule1은 tp 14·fp 21·fn 3·tn 509, f1 0.5385, 판정 불가 이상 4개를 FN으로 센 f1_all 0.5000이다. [데이터]
 - AUC 1.0000 모델도 F1은 mcd_amp_sine 0.5397(fp 29), cnn_lstm_ae_cur1 0.4928(fp 35), ocsvm_amp_sine 0.4146(fp 48), cnn_lstm_ae_all3_res 0.3953(fp 52)으로 갈린다. [데이터]
 - time_block 1초(블록 평균) 상위: ridge_var 0.9583(블록 min–max 0.9189–0.9714, fp 1.5·fn 0), copod_amp_sine 0.9201(블록 min–max 0.8000–0.9697, `_sine`), copod_amp_rel 0.9185(`_rel`), copod_amp 0.9172, mcd_amp_rel 0.9128(`_rel`), lstm_ad 0.9102, cnn_deepant 0.8981(fp 4.0), pca_raw_ae_all3 0.8956. 규칙 7종은 rule2 0.7845 ~ rule3e 0.8633이다. [데이터]
@@ -88,6 +90,35 @@
 **시사점.** 1-3절에서 같은 q의 kofn이 높은 F1을 준 것은 주로 오경보율 차이 때문이다(pca gkf q 0.99 fp any 31 vs kofn 2 → 목표 0.02 정렬 후 13 vs 10). 다만 정렬 후에도 test 실측 오경보율은 규칙마다 다르고(pca gkf 0.02: any 0.0245 vs kofn 0.0189, pca time_block 0.02: kofn 0.0362가 목표 초과), 둘이 같은 조건은 rule1 gkf 0.02(둘 다 0.0226)뿐이다. 오경보율을 맞추면 kofn·시작 윈도우 제외는 recall과 탐지 지연을 잃고 F1 이득이 없다. 2모델·이상 1이벤트의 결과다. [추정]
 
 **활용 아이디어(4번).** 2단계 경보의 1차 경보(OR 주의)는 any, 확정(AND 경보)은 집계 규칙을 늘리기보다 정상 기준 목표 오경보율로 임계를 정하는 방식을 우선 검토한다(`docs/design_JIW.md`와 연계).
+
+### 1-5. 최종 경보 구조 후보 비교 — 28(CNN + MCD) vs 23(Ridge-VAR + MCD)
+
+**방법.** 28과 23은 같은 2단계 구조(주의 = 예측 모델 단독 초과, 경보 = 예측 모델 AND MCD 초과)를 각각 확정했지만 28은 2초 윈도우·세그먼트 평균 제거 입력, 23은 1초 윈도우·1차 차분 입력이라 분모가 다르다(정상 452 대 530, 이상 13 대 17). 그래서 두 노트북의 `scores.csv`(윈도우별 점수, 시드 3개)만 읽어 두 체계가 모두 판정하는 세그먼트에서 다시 셌다. 재학습·재채점은 하지 않았다. z = 점수 / fold train 정상 q99, 주의 = z_예측 > 1, 경보 = min(z_예측, z_MCD) > 1, 세그먼트 판정은 any다. 이렇게 다시 센 fold별 세그먼트 오경보율이 각 노트북 `metrics.csv`(28 cnn·cnn&mcd, 23 ridge_diff·ridge&mcd)와 전 fold에서 같음을 assert했다. gkf는 5 fold 합산, time_block은 블록별 계산 후 블록 평균, 시드는 마지막에 평균했다. 시간당 값은 두 체계에 같은 계수(2초 윈도우가 있는 정상 452개 / 76.93분 = 352.53 세그먼트/시간)를 곱했다. 차이의 구간은 공통 정상 세그먼트 단위 쌍 부트스트랩(2,000회, seed 42)이다. [데이터: 노트북 A-5 셀, `final_alarm_28_vs_23.csv`]
+
+**발견.**
+
+| 체계 | split | 단계 | fp / 정상 | fpr_segment | 시간당 거짓 경보 | 이상 탐지 | F1 | 지연 중앙값 |
+|---|---|---|---|---|---|---|---|---|
+| 28 CNN+MCD | gkf | 주의 | 12.67 / 452 | 0.0280 | 9.9 | 13/13 | 0.6728 | 1.9초 |
+| 23 Ridge+MCD | gkf | 주의 | 10.00 / 452 | 0.0221 | 7.8 | 13/13 | 0.7222 | 0.9초 |
+| 28 CNN+MCD | gkf | 경보 | 1.00 / 452 | 0.0022 | 0.8 | 13/13 | 0.9630 | 1.9초 |
+| 23 Ridge+MCD | gkf | 경보 | 0.00 / 452 | 0.0000 | 0.0 | 13/13 | 1.0000 | 0.9초 |
+| 28 CNN+MCD | time_block | 주의 | 1.58 / 88.5 | 0.0179 | 6.3 | 13/13 | 0.9431 | 1.9초 |
+| 23 Ridge+MCD | time_block | 주의 | 1.50 / 88.5 | 0.0172 | 6.1 | 13/13 | 0.9464 | 0.9초 |
+| 28 CNN+MCD | time_block | 경보 | 0.08 / 88.5 | 0.0009 | 0.3 | 13/13 | 0.9969 | 1.9초 |
+| 23 Ridge+MCD | time_block | 경보 | 0.25 / 88.5 | 0.0029 | 1.0 | 13/13 | 0.9907 | 0.9초 |
+
+(fp는 시드 3개 평균, time_block은 블록 1~4 평균이라 소수다.)
+
+- **오경보율로는 두 체계를 가를 수 없다.** 차이(23 − 28)의 95% 구간이 네 경우 모두 0을 포함한다: gkf 주의 −0.0059 [−0.0155, 0.0022], gkf 경보 −0.0022 [−0.0052, 0.0000], time_block 주의 −0.0009 [−0.0094, 0.0075], time_block 경보 +0.0019 [−0.0028, 0.0085]. time_block 경보에서는 방향도 뒤집힌다. [데이터: `final_alarm_28_vs_23_bootstrap.csv`]
+- **주의 단계의 FP는 같은 세그먼트에 몰린다.** gkf에서 시드 하나라도 주의가 난 정상 세그먼트는 28 16개·23 10개이고 23의 10개는 전부 28의 16개에 들어 있다(Jaccard 0.625). time_block은 8개·6개·겹침 5개(0.556). 고부하가 28 15/16, 23 9/10이다. [데이터: `final_alarm_28_vs_23_fp_overlap.csv`]
+- **경보 단계의 FP는 겹치지 않는다.** gkf에서 28은 normal_201·283·425 세 세그먼트가 각각 시드 1개에서만 경보를 냈고(전부 고부하) 23은 0개다. time_block은 각 1개씩이고 서로 다른 세그먼트다. [데이터: `final_alarm_28_vs_23_segments.csv`]
+- **탐지는 같고 지연은 1초 차이다.** 공통 이상 13개를 두 체계·두 단계 모두 전부 탐지했다. 지연 중앙값은 28 1.9초, 23 0.9초로 윈도우 길이 차이 그대로이고, burst 간격을 더한 체감 지연은 9.86초 대 8.86초다. [데이터]
+- **판정 범위는 23이 넓다.** 23은 28이 판정하지 못하는 길이 1초 이상 2초 미만 세그먼트(정상 78개·이상 4개)를 추가로 판정한다. 이 구간에서 gkf 주의 FP는 1/78(0.0128), 경보 FP는 0, 이상 4개는 주의·경보 모두 탐지했다. 판정 가능 세그먼트는 정상 530/599 대 452/599, 이상 17/21 대 13/21이다. [데이터]
+
+**시사점.** 같은 세그먼트 위에서는 두 체계의 오경보·탐지 성능이 구분되지 않는다. 따라서 최종 구조의 선택 근거는 성능 수치가 아니라 운영 조건이다: 23은 (1) 미래 샘플을 쓰지 않는 입력이고(34), (2) 판정이 1초 빠르고, (3) 2초 미만 burst까지 판정하며, (4) 딥러닝 가중치 파일 없이 재현된다. 예측 모델·입력·윈도우가 모두 다른 두 구현이 같은 구조에서 같은 수준의 결과를 냈다는 점은 "서로 다른 계열의 AND가 오경보를 줄인다"는 결론이 특정 모델 쌍에 의존하지 않는다는 근거가 된다. 다만 두 결과 모두 같은 정상 하루·같은 이상 이벤트 1건 위의 것이라 독립 데이터에서의 재현은 아니다. 또 두 체계는 모델·입력·윈도우가 한꺼번에 달라 어느 요소가 차이를 만드는지는 이 비교로 분리되지 않는다. [추정]
+
+**활용 아이디어(2·4번).** 최종 보고서의 최종 모델 절은 운영 구조로 23을 제시하고 28을 2초·오프라인 조건의 대조 구현으로 함께 싣는 구성을 제안한다(팀 확정 필요). 두 체계를 나란히 놓을 때는 리포트별 수치(분모가 다름) 대신 이 절의 공통 세그먼트 표를 쓴다. 그림: [공통 세그먼트 기준 시간당 거짓 경보](../figures/31_error_analysis_CHS/final_alarm_28_vs_23.png).
 
 ---
 
@@ -197,6 +228,8 @@
 - 24~27의 F1은 시드 평균 fold 행에서 재구성한 값이라 tp·fp가 소수이고, 27 cnn_lstm_ae_all3_w1s는 재구성(tp 15.67·fp 40.67)과 단일 시드 직접 계산(tp 16·fp 42)이 다르다. [데이터]
 - 민감도·운영점(1-3·1-4절)은 2모델(rule1_rms_ai0·pca_spe_amp18)뿐이다(24~26은 윈도우 점수·train 점수 없음, 27 scores.csv는 OOF만). quantile 규칙은 burst 종료 후 판정이다. [데이터]
 - E·F절은 relwin 4열(11 옵트인)을 제외한 33열 기준이고 D절만 relwin을 포함한 31열(중복 제거 후)이다. [데이터]
+- 1-5절은 체계 대 체계 비교다. 28과 23은 예측 모델·입력·윈도우가 동시에 달라 요소별 기여를 분리하지 못했고, 공통 이상 세그먼트는 13개(이벤트 1건)다. 23의 MCD 시드와 28의 CNN 시드는 서로 무관해 시드별 짝을 짓지 않고 시드 평균으로 비교했다. [데이터]
+- 이번 재실행 환경(Python 3.13.13, numpy 2.5.1)이 `requirements.txt` 고정 버전과 달라 기존 192행에 최대 2.2e-16의 표기 차이가 생겼다. `model_comparison.csv`의 기존 행은 이전 텍스트를 유지했고, 정렬 동률 순서·1e-9 이하 차이만 생긴 CSV 4개와 그림 3장은 이전 커밋 상태로 두었다. [데이터]
 
 ## 8. 다음 단계
 
