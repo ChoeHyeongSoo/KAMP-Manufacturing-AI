@@ -1,0 +1,107 @@
+model_id,split,fold,type,seg_uid,n_exceed,n_windows,state,vib_grade,cur_grade
+lstm_ae_guidebook_w1s,group_kfold_seg,0,FP,normal_178,3.0,5.0,고부하,,
+lstm_ae_guidebook_w1s,group_kfold_seg,0,FP,normal_400,3.0,9.0,고부하,,
+lstm_ae_guidebook_w1s,group_kfold_seg,0,FP,normal_62,3.0,9.0,고부하,,
+lstm_ae_guidebook_w1s,group_kfold_seg,0,FN,outlier_4,,,,확실 이상,경계
+lstm_ae_guidebook_w1s,group_kfold_seg,0,FN,outlier_19,,,,정상 유사,확실 이상
+lstm_ae_guidebook_w1s,group_kfold_seg,1,FP,normal_309,3.0,9.0,저부하,,
+lstm_ae_guidebook_w1s,group_kfold_seg,1,FN,outlier_14,,,,확실 이상,경계
+lstm_ae_guidebook_w1s,group_kfold_seg,1,FN,outlier_20,,,,정상 유사,확실 이상
+lstm_ae_guidebook_w1s,group_kfold_seg,3,FP,normal_20,3.0,3.0,저부하,,
+lstm_ae_guidebook_w1s,group_kfold_seg,3,FP,normal_342,3.0,8.0,고부하,,
+lstm_ae_guidebook_w1s,group_kfold_seg,4,FP,normal_181,3.0,9.0,고부하,,
+lstm_ae_guidebook_w1s,group_kfold_seg,4,FN,outlier_3,,,,정상 유사,경계
+lstm_ae_guidebook_w1s,group_kfold_seg,4,FN,outlier_18,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w1s,time_block,1,FP,normal_133,3.0,6.0,고부하,,
+lstm_ae_guidebook_w1s,time_block,1,FP,normal_170,3.0,7.0,고부하,,
+lstm_ae_guidebook_w1s,time_block,1,FP,normal_178,3.0,5.0,고부하,,
+lstm_ae_guidebook_w1s,time_block,1,FN,outlier_3,,,,정상 유사,경계
+lstm_ae_guidebook_w1s,time_block,1,FN,outlier_4,,,,확실 이상,경계
+lstm_ae_guidebook_w1s,time_block,1,FN,outlier_7,,,,확실 이상,경계
+lstm_ae_guidebook_w1s,time_block,1,FN,outlier_12,,,,확실 이상,정상 유사
+lstm_ae_guidebook_w1s,time_block,1,FN,outlier_14,,,,확실 이상,경계
+lstm_ae_guidebook_w1s,time_block,1,FN,outlier_17,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w1s,time_block,1,FN,outlier_18,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w1s,time_block,1,FN,outlier_19,,,,정상 유사,확실 이상
+lstm_ae_guidebook_w1s,time_block,1,FN,outlier_20,,,,정상 유사,확실 이상
+lstm_ae_guidebook_w1s,time_block,2,FP,normal_248,3.0,6.0,고부하,,
+lstm_ae_guidebook_w1s,time_block,2,FP,normal_259,3.0,5.0,고부하,,
+lstm_ae_guidebook_w1s,time_block,2,FN,outlier_3,,,,정상 유사,경계
+lstm_ae_guidebook_w1s,time_block,2,FN,outlier_4,,,,확실 이상,경계
+lstm_ae_guidebook_w1s,time_block,2,FN,outlier_12,,,,확실 이상,정상 유사
+lstm_ae_guidebook_w1s,time_block,2,FN,outlier_14,,,,확실 이상,경계
+lstm_ae_guidebook_w1s,time_block,2,FN,outlier_17,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w1s,time_block,2,FN,outlier_18,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w1s,time_block,2,FN,outlier_19,,,,정상 유사,확실 이상
+lstm_ae_guidebook_w1s,time_block,2,FN,outlier_20,,,,정상 유사,확실 이상
+lstm_ae_guidebook_w1s,time_block,3,FP,normal_379,3.0,7.0,고부하,,
+lstm_ae_guidebook_w1s,time_block,3,FP,normal_389,3.0,9.0,고부하,,
+lstm_ae_guidebook_w1s,time_block,3,FP,normal_400,3.0,9.0,고부하,,
+lstm_ae_guidebook_w1s,time_block,3,FP,normal_435,3.0,6.0,고부하,,
+lstm_ae_guidebook_w1s,time_block,3,FP,normal_455,3.0,9.0,고부하,,
+lstm_ae_guidebook_w1s,time_block,3,FN,outlier_3,,,,정상 유사,경계
+lstm_ae_guidebook_w1s,time_block,3,FN,outlier_4,,,,확실 이상,경계
+lstm_ae_guidebook_w1s,time_block,3,FN,outlier_12,,,,확실 이상,정상 유사
+lstm_ae_guidebook_w1s,time_block,3,FN,outlier_14,,,,확실 이상,경계
+lstm_ae_guidebook_w1s,time_block,3,FN,outlier_17,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w1s,time_block,3,FN,outlier_18,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w1s,time_block,3,FN,outlier_19,,,,정상 유사,확실 이상
+lstm_ae_guidebook_w1s,time_block,3,FN,outlier_20,,,,정상 유사,확실 이상
+lstm_ae_guidebook_w1s,time_block,4,FN,outlier_3,,,,정상 유사,경계
+lstm_ae_guidebook_w1s,time_block,4,FN,outlier_4,,,,확실 이상,경계
+lstm_ae_guidebook_w1s,time_block,4,FN,outlier_12,,,,확실 이상,정상 유사
+lstm_ae_guidebook_w1s,time_block,4,FN,outlier_14,,,,확실 이상,경계
+lstm_ae_guidebook_w1s,time_block,4,FN,outlier_17,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w1s,time_block,4,FN,outlier_18,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w1s,time_block,4,FN,outlier_19,,,,정상 유사,확실 이상
+lstm_ae_guidebook_w1s,time_block,4,FN,outlier_20,,,,정상 유사,확실 이상
+lstm_ae_guidebook_w2s,group_kfold_seg,0,FP,normal_178,1.0,3.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,0,FP,normal_254,1.0,2.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,0,FP,normal_359,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,0,FP,normal_400,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,0,FP,normal_435,1.0,4.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,0,FP,normal_450,1.0,6.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,0,FP,normal_62,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,1,FP,normal_309,1.0,7.0,저부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,1,FP,normal_569,3.0,5.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,1,FP,normal_63,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,1,FP,normal_67,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,3,FP,normal_113,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,3,FP,normal_259,1.0,3.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,3,FP,normal_357,1.0,1.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,3,FP,normal_389,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,4,FP,normal_329,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,group_kfold_seg,4,FN,outlier_3,,,,정상 유사,경계
+lstm_ae_guidebook_w2s,time_block,1,FP,normal_133,1.0,4.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,1,FP,normal_140,1.0,1.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,1,FP,normal_170,1.0,5.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,1,FP,normal_178,1.0,3.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,1,FP,normal_193,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,1,FN,outlier_3,,,,정상 유사,경계
+lstm_ae_guidebook_w2s,time_block,1,FN,outlier_12,,,,확실 이상,정상 유사
+lstm_ae_guidebook_w2s,time_block,1,FN,outlier_17,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w2s,time_block,1,FN,outlier_18,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w2s,time_block,2,FP,normal_248,1.0,4.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,2,FP,normal_254,1.0,2.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,2,FP,normal_259,1.0,3.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,2,FP,normal_264,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,2,FP,normal_300,1.0,4.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,2,FP,normal_310,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,2,FP,normal_342,1.0,6.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,2,FP,normal_348,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,2,FP,normal_357,1.0,1.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,2,FN,outlier_3,,,,정상 유사,경계
+lstm_ae_guidebook_w2s,time_block,2,FN,outlier_18,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w2s,time_block,3,FP,normal_379,1.0,5.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,3,FP,normal_386,1.0,2.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,3,FP,normal_389,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,3,FP,normal_400,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,3,FP,normal_435,1.0,4.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,3,FP,normal_450,1.0,6.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,3,FP,normal_455,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,3,FN,outlier_3,,,,정상 유사,경계
+lstm_ae_guidebook_w2s,time_block,3,FN,outlier_12,,,,확실 이상,정상 유사
+lstm_ae_guidebook_w2s,time_block,3,FN,outlier_17,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w2s,time_block,3,FN,outlier_18,,,,확실 이상,확실 이상
+lstm_ae_guidebook_w2s,time_block,4,FP,normal_575,1.0,7.0,고부하,,
+lstm_ae_guidebook_w2s,time_block,4,FN,outlier_3,,,,정상 유사,경계
