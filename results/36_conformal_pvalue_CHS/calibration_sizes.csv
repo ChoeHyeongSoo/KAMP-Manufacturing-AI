@@ -1,0 +1,10 @@
+split,fold,n_train_seg,n_proper_seg,n_proper_win,n_cal_seg,n_cal_win,cal_first,cal_last,min_p_seg,min_p_win,seg_attainable_0.005,seg_attainable_0.01,seg_attainable_0.02,seg_attainable_0.04,seg_attainable_0.05,seg_attainable_0.1,seg_attainable_0.2,win_attainable_0.005,win_attainable_0.01,win_attainable_0.02,win_attainable_0.04,win_attainable_0.05,win_attainable_0.1,win_attainable_0.2
+group_kfold_seg,0,421,316,1953,105,652,normal_456,normal_597,0.009433962264150943,0.0015313935681470138,False,True,True,True,True,True,True,True,True,True,True,True,True,True
+group_kfold_seg,1,426,319,1954,107,659,normal_447,normal_598,0.009259259259259259,0.0015151515151515152,False,True,True,True,True,True,True,True,True,True,True,True,True,True
+group_kfold_seg,2,428,321,1983,107,664,normal_453,normal_598,0.009259259259259259,0.0015037593984962407,False,True,True,True,True,True,True,True,True,True,True,True,True,True
+group_kfold_seg,3,420,315,1951,105,626,normal_454,normal_598,0.009433962264150943,0.001594896331738437,False,True,True,True,True,True,True,True,True,True,True,True,True,True
+group_kfold_seg,4,425,319,1978,106,636,normal_455,normal_598,0.009345794392523364,0.0015698587127158557,False,True,True,True,True,True,True,True,True,True,True,True,True,True
+time_block,1,113,85,569,28,169,normal_89,normal_119,0.034482758620689655,0.0058823529411764705,False,False,False,True,True,True,True,False,True,True,True,True,True,True
+time_block,2,215,161,1032,54,314,normal_179,normal_239,0.01818181818181818,0.0031746031746031746,False,False,True,True,True,True,True,True,True,True,True,True,True,True
+time_block,3,314,235,1469,79,496,normal_265,normal_359,0.0125,0.002012072434607646,False,False,True,True,True,True,True,True,True,True,True,True,True,True
+time_block,4,422,316,1983,106,620,normal_362,normal_479,0.009345794392523364,0.001610305958132045,False,True,True,True,True,True,True,True,True,True,True,True,True,True
