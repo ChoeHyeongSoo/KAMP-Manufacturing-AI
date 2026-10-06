@@ -61,3 +61,11 @@ notebook,model,split,win_s,metrics_miss_seedmean,error_cases_miss_seed0,diff,ec_
 27_model_cnn_lstm_ae_CHS,cnn_lstm_ae_all3_w2s,time_block,2.0,1.0000000000000018,2.0,-0.9999999999999982,True
 27_model_cnn_lstm_ae_CHS,cnn_lstm_ae_vib2_w1s,group_kfold_seg,1.0,3.0,3.0,0.0,True
 27_model_cnn_lstm_ae_CHS,cnn_lstm_ae_vib2_w1s,time_block,1.0,11.0,11.0,0.0,True
+28_model_ensemble_JIW,cnn&mcd [2/3],group_kfold_seg,2.0,1.0,0.0,1.0,True
+28_model_ensemble_JIW,cnn&mcd [2/3],time_block,2.0,4.0,0.0,4.0,True
+28_model_ensemble_JIW,cnn&mcd [3/5],group_kfold_seg,2.0,3.0,0.0,3.0,True
+28_model_ensemble_JIW,cnn&mcd [3/5],time_block,2.0,12.0,0.0,12.0,True
+28_model_ensemble_JIW,cnn|mcd [2/3],group_kfold_seg,2.0,1.0,0.0,1.0,True
+28_model_ensemble_JIW,cnn|mcd [2/3],time_block,2.0,4.0,0.0,4.0,True
+28_model_ensemble_JIW,cnn|mcd [3/5],group_kfold_seg,2.0,3.0,0.0,3.0,True
+28_model_ensemble_JIW,cnn|mcd [3/5],time_block,2.0,12.0,0.0,12.0,True

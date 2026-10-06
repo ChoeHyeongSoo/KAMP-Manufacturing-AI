@@ -1,7 +1,7 @@
 # 주제 ③ 프레스 유압펌프 — 모델 비교표 및 FN·FP 오류분석 리포트 (31_error_analysis_CHS)
 
 - 노트북: `notebooks/31_error_analysis_CHS.ipynb` (실행 결과 포함, 에러 셀 0)
-- 목적: 모델 노트북(21·24·25·26·27)의 `metrics.csv`를 모아 비교표를 만들고, 미탐(FN)·오경보(FP)가 몰리는 조건과 그 원인(상관 구조 변화, 정상 부분공간 이탈, 분포 형태 차이)을 정리한다.
+- 목적: 모델 노트북(21·24·25·26·27·28)의 `metrics.csv`를 모아 비교표를 만들고, 미탐(FN)·오경보(FP)가 몰리는 조건과 그 원인(상관 구조 변화, 정상 부분공간 이탈, 분포 형태 차이)을 정리한다.
 - 심사 기준 대응: 2번(모델 비교표), 3번(FN/FP 집중 조건), 4번(상태별 경보 운영 근거), 5번(라벨 노이즈·단변량 규칙 한계 관점의 FN 해석)
 - 탐지 대상 표현: 유압펌프 모터-펌프 구동부 이상(센서 부착 부위를 확정할 수 없어 원인이 모터인지 펌프인지는 데이터로 구분하지 않는다).
 - 근거 수준 표기: **[데이터]** 이 리포트의 CSV·노트북 출력으로 직접 확인 / **[추정]** 데이터에서 논리적으로 따라오나 직접 검증하지 않음 / **[가정]** 현장·운영 전제.
@@ -9,7 +9,7 @@
 
 | 절 | 핵심 결과 | 출처 |
 |---|---|---|
-| A 비교표 | 평균 행 142행(규칙 7종 + 모델 27종), 1초 gkf AUC 0.9998 이상 9개 모델, 규칙 베이스라인 0.7840~0.8696 | `results/model_comparison.csv` |
+| A 비교표 | 평균 행 180행(규칙 7종 + 모델 27종 + 28 결합 19종), 2초 gkf F1 cnn&mcd 0.9630 / cnn|mcd 0.4756, 1초 gkf AUC 0.9998 이상 9개 모델, 규칙 베이스라인 0.7840~0.8696 | `results/model_comparison.csv` |
 | A-2 F1 | gkf 1초 세그먼트 F1(any·q 0.99·5 fold 합산) 최고 copod_amp_sine 0.7083(fp 14, `_sine` 계열)·진폭 전용 최고 mtad_gat 0.6892, 규칙 7종 0.5000~0.5957(rule1 0.5385), 최저 cnn_lstm_ae_all3_zwin 0.3036. time_block(블록 평균) 최고 copod_amp_sine 0.9201(진폭 전용 최고 lstm_ad 0.9102) | `results/model_comparison.csv`(f1), `segment_f1_by_fold.csv` |
 | A-3 민감도 | q를 올리면 any는 fp만 줄어 F1 상승(rule1 gkf 0.5385→0.7778, pca_spe_amp18 0.5231→0.9189), pca_spe_amp18의 kofn·quantile은 fn이 늘어(2→4, 0→3) 정점이 중간 q, rule1 kofn은 fn 4로 일정해 단조 상승 | `f1_sensitivity_grid.csv`(f1·fp·fn) |
 | A-4 오경보율 정렬 | 오경보율을 0.02·0.04로 맞추면 8개 비교(같은 이벤트 안의 조건, 최소 차이 0.009) 모두 any가 kofn·skip1보다 F1이 높다(pca_spe_amp18 gkf 0.02: 0.7234 vs 0.7143 vs 0.6667), 지연 0.9초 vs 1.4초 | `f1_matched_fpr.csv`(f1·recall·delay_median_s) |
@@ -25,7 +25,7 @@
 
 ## 1. A. 모델 비교표
 
-**방법.** `results/*/metrics.csv`(21·24·25·26·27) 781행을 합친 뒤 fold 평균 행만 모아 `results/model_comparison.csv`(142행)를 만들었다. 분할×윈도우별 행 수는 group_kfold_seg(gkf)·time_block 모두 1초 34 / 2초 30 / 3초 7(3초는 규칙 7종만 있음). 21의 rule3e(rule3c의 causal 변형, `vib_corr01_cum`)가 새로 들어갔다. 27은 error_cases를 전 시드 저장하므로 B·C에서는 `seed` 열로 첫 시드만 쓴다. [데이터: 노트북 셀 5 출력, `model_comparison.csv`]
+**방법.** `results/*/metrics.csv`(21·24·25·26·27·28) 990행을 합친 뒤 fold 평균 행만 모아 `results/model_comparison.csv`(180행)를 만들었다. 분할×윈도우별 행 수는 group_kfold_seg(gkf)·time_block 모두 1초 34 / 2초 49 / 3초 7(3초는 규칙 7종만, 28 결합 19종은 2초만 있음). 21의 rule3e(rule3c의 causal 변형, `vib_corr01_cum`)가 새로 들어갔다. 27은 error_cases를 전 시드 저장하므로 B·C에서는 `seed` 열로 첫 시드만 쓴다. [데이터: 노트북 셀 5 출력, `model_comparison.csv`]
 
 **발견.**
 - gkf 1초 AUC / fpr_segment 상위: mcd_amp_sine 1.0000 / 0.0546, ocsvm_amp_sine 1.0000 / 0.0896, cnn_lstm_ae_cur1 1.0000 / 0.0666, cnn_lstm_ae_all3_res 1.0000 / 0.0979, cnn_deepant 0.9999 / 0.0317, gdn 0.9999 / 0.0426, mtad_gat 0.9999 / 0.0286, ocsvm_amp_rel 0.9999 / 0.1106, lstm_ad 0.9998 / 0.0349. [데이터: `model_comparison.csv`]
@@ -35,6 +35,7 @@
 - 세그먼트 오경보율 최저는 copod_amp_sine 0.0264, mtad_gat 0.0286, rule3c 0.0303, cnn_deepant 0.0317, 최고는 cnn_lstm_ae_all3_zwin 0.1482, ocsvm_amp_rel 0.1106. AUC가 거의 같아도 오경보율은 5배 가까이 벌어진다. [데이터]
 - time_block 1초에서는 ocsvm_amp_rel fpr_segment가 0.2429로 gkf(0.1106)보다 크게 나빠진다. cnn_deepant는 AUC 0.9999 / 0.0387로 유지된다. [데이터]
 - 3초 윈도우는 규칙 7종만 있다(gkf AUC rule3 0.9496 ~ rule3d 0.8932, rule3e 0.9272). [데이터]
+- 28 결합(2초, 19행 × 2 split; 모델명에 `&`=AND, `|`=OR, `[2/3]`·`[3/5]`=k-of-n, `[상태별]`=상태별 q99)은 `cnn`·`mcd`가 24 `cnn_deepant_w2s`·26 `mcd_amp_w2s`와 같은 가중치라 fpr_segment·F1이 일치한다(gkf 0.0285/0.6724, 0.0378/0.6047). 2초 gkf F1은 cnn&mcd 0.9630(fp 1·fn 0), lstm&mcd 0.9873, gat&mcd 1.0000(fp 0), cnn|mcd 0.4756(fp 28.67), cnn&mcd [2/3] 0.9600(fn 1), [3/5] 0.8696(fn 3); time_block cnn&mcd 0.9968. k-of-n·상태별 행의 F1은 28의 해당 규칙 조건이며 any·q 0.99 대표 조건이 아니다. 28 `error_cases.csv`는 `model_id` 대신 `rule` 열이라 B·C(FN·FP 세그먼트 분석)에서는 제외했다. [데이터: `model_comparison.csv`, `reports/28_model_ensemble_JIW.md`]
 - rule3c의 causal 변형 rule3e는 1초 gkf AUC 0.8435 / fpr_segment 0.0323, time_block 0.8841 → 0.8502 / 0.0162 → 0.0141로, 세그먼트 브로드캐스트 상관이 주던 순위 이득의 약 1/3이 미래 정보였음을 보인다(21 §7). [데이터]
 - **`_sine`·`_rel` 접미사 모델은 입력에 세그먼트 단위 브로드캐스트 피처(전류 사인 적합, 방향·비율 피처)가 들어간다.** 03에서 사인 잔차 피처의 세그먼트 단위 AUC가 1.000으로 나왔고(`reports/03_diagnosis_recheck_CHS.md`), 이 값은 날짜 교란 가능성과 분리되지 않는다. 따라서 `_sine`·`_rel` 결과는 진폭 전용 결과(cnn_deepant·lstm_ad·mtad_gat·gdn 및 접미사 없는 분포 모델)와 분리해 읽는다. [추정: 교란 여부는 별도 ablation 필요]
 
