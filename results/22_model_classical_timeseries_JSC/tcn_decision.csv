@@ -1,0 +1,2 @@
+decision,rule,passing_models
+TCN 보류,"선형 후보가 DeepAnT 대비 fpr_segment +0.01 이내, inj_mean -0.03 이내, 탐지 수 동률을 동시에 만족하는가",Ridge-VAR

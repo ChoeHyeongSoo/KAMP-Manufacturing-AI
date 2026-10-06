@@ -645,6 +645,8 @@ notebooks/22_model_classical_timeseries_JSC.ipynb
 - MCD의 타원 가정과 Isolation Forest의 tree isolation 비교
 - 완전 causal 모델의 기준 성능 확보
 
+**실행 완료(2026-10-06):** [22 고전 시계열·트리 모델](22_model_classical_timeseries_JSC.md)에서 1초·9분할 전체 비교를 수행했다. Ridge-VAR는 time-block AUC 1.0000, `fpr_segment` 0.0145, 평가 가능 이상 17/17, 합성 이상 평균 0.2857로 DeepAnT(0.9999 / 0.0387 / 17/17 / 0.2538)를 앞섰다. Isolation Forest는 16/17·`fpr_segment` 0.0925로 MCD보다 불리했다. 사전 조건에 따라 **TCN은 보류**하며, Ridge-VAR의 causal 전처리 검증을 다음 단계로 둔다.
+
 ### 17.2 2차: 비선형 시계열 보강
 
 권장 노트북:
@@ -791,4 +793,3 @@ base model을 추가하는 대신 다음을 수행한다.
 - Matrix Profile: [Matrix Profile II](https://doi.org/10.1109/ICDM.2016.0085)
 - Anomaly Transformer: [Anomaly Transformer: Time Series Anomaly Detection with Association Discrepancy](https://openreview.net/forum?id=LzQQ89U1qm_)
 - Conformal threshold: [Conformalized Time Series Anomaly Thresholding with Latent Space Features](https://proceedings.mlr.press/v329/xu26a.html)
-

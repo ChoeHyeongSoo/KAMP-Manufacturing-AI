@@ -1,0 +1,9 @@
+model,split,auc,fpr_sample,fpr_segment,n_detected,n_out_seg,delay_median_s,fpr_high_load,fpr_low_load,inj_mean,sec
+Naive persistence,group_kfold_seg,0.8221,0.0097,0.0434,3.0,3.4,0.95,0.0216,0.0,0.1084,0.3672
+Ridge-VAR,group_kfold_seg,1.0,0.0116,0.028,3.4,3.4,0.9,0.0235,0.0016,0.2763,0.7544
+Kalman innovation,group_kfold_seg,0.904,0.0112,0.0317,3.0,3.4,0.95,0.0253,0.0,0.1171,4.0438
+Isolation Forest [amp],group_kfold_seg,0.9878,0.0108,0.0446,3.2,3.4,0.95,0.0204,0.0031,0.1249,0.8416
+Naive persistence,time_block,0.814,0.0275,0.1096,15.0,17.0,0.9,0.0546,0.0,0.1143,0.2968
+Ridge-VAR,time_block,1.0,0.006,0.0145,17.0,17.0,0.9,0.0184,0.0,0.2857,0.6835
+Kalman innovation,time_block,0.8925,0.0298,0.0879,15.0,17.0,0.9,0.0612,0.0,0.1324,3.8052
+Isolation Forest [amp],time_block,0.9851,0.0203,0.0925,16.0,17.0,0.9,0.0307,0.0105,0.1138,0.8212
