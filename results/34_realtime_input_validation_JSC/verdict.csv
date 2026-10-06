@@ -1,0 +1,4 @@
+variant,causal,detected_17_of_17,auc_ge_099,fpr_within_offline_plus_001,decision
+offline_mean,False,True,True,True,offline benchmark
+fixed_baseline,True,True,True,True,upper bound: residual DC
+first_difference,True,True,True,True,adopt
