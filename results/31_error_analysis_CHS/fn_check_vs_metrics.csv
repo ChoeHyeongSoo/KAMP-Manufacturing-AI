@@ -41,6 +41,12 @@ notebook,model,split,win_s,metrics_miss_seedmean,error_cases_miss_seed0,diff,ec_
 21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,time_block,1.0,12.0,0.0,12.0,False
 21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,time_block,2.0,4.0,0.0,4.0,False
 21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,time_block,3.0,4.0,0.0,4.0,False
+22_model_classical_timeseries_JSC,iforest_amp_w1s,group_kfold_seg,1.0,1.0,1.0,0.0,True
+22_model_classical_timeseries_JSC,iforest_amp_w1s,time_block,1.0,4.0,4.0,0.0,True
+22_model_classical_timeseries_JSC,kalman_innovation_w1s,group_kfold_seg,1.0,2.0,2.0,0.0,True
+22_model_classical_timeseries_JSC,kalman_innovation_w1s,time_block,1.0,8.0,8.0,0.0,True
+22_model_classical_timeseries_JSC,naive_persistence_w1s,group_kfold_seg,1.0,2.0,2.0,0.0,True
+22_model_classical_timeseries_JSC,naive_persistence_w1s,time_block,1.0,8.0,8.0,0.0,True
 25_model_graph_JIW,gdn_w1s,time_block,1.0,1.0,0.0,1.0,True
 26_model_distribution_JIW,copod_amp_rel_w1s,group_kfold_seg,1.0,1.0,1.0,0.0,True
 26_model_distribution_JIW,copod_amp_rel_w1s,time_block,1.0,4.0,4.0,0.0,True
@@ -69,3 +75,7 @@ notebook,model,split,win_s,metrics_miss_seedmean,error_cases_miss_seed0,diff,ec_
 28_model_ensemble_JIW,cnn|mcd [2/3],time_block,2.0,4.0,0.0,4.0,True
 28_model_ensemble_JIW,cnn|mcd [3/5],group_kfold_seg,2.0,3.0,0.0,3.0,True
 28_model_ensemble_JIW,cnn|mcd [3/5],time_block,2.0,12.0,0.0,12.0,True
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,group_kfold_seg,1.0,6.0,6.0,0.0,True
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,time_block,1.0,33.0,33.0,0.0,True
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w2s,group_kfold_seg,2.0,1.0,1.0,0.0,True
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w2s,time_block,2.0,11.0,11.0,0.0,True
