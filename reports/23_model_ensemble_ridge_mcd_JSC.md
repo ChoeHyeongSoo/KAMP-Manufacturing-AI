@@ -1,15 +1,17 @@
 # 주제 ③ 프레스 유압펌프 — Ridge 1차 차분 + MCD 앙상블 검증 리포트
 
 - 노트북: `notebooks/23_model_ensemble_ridge_mcd_JSC.ipynb` (실행 결과 포함, 에러 셀 0)
-- 목적: 최종 causal 시계열 후보 Ridge와 통계분포 MCD를 결합해 실제 이상 탐지를 유지하면서 오경보를 낮출 수 있는지 검증한다.
+- 목적: causal 시계열 후보 Ridge와 통계분포 MCD를 결합해 실제 이상 탐지를 유지하면서 오경보를 낮출 수 있는지 검증한다.
 - 입력: 공통 형식 통일 → burst별 1차 차분, 1초 윈도우
 - 코드: `src/ensemble_jsc.py`, `src/realtime_jsc.py`, `src/models_jsc.py`
 - 출력: `figures/23_model_ensemble_ridge_mcd_JSC/`, `results/23_model_ensemble_ridge_mcd_JSC/`
-- 심사 기준 대응: 2번(최종 모델·앙상블 비교), 3번(FP 겹침·상태별 오류), 4번(주의/경보 운영), 5번(예측+통계 관점 결합), 6번(재현성)
+- 심사 기준 대응: 2번(앙상블 비교), 3번(FP 겹침·상태별 오류), 4번(주의/경보 운영), 5번(예측+통계 관점 결합), 6번(재현성)
+
+> **후속 선택(2026-10-07).** Ridge + MCD까지 검토했으나 최종 모델은 **CNN + MCD**를 유지한다. CNN 단독의 2초 합성 강도 2 탐지율은 time-block 0.714로 Ridge 1초의 0.519보다 높았고, CNN AND MCD 경보의 time-block 세그먼트 오경보율도 0.1%로 Ridge AND MCD의 0.25%보다 낮았다. 두 실험은 윈도우와 전처리가 달라 직접 순위 비교에는 한계가 있지만, 근거 카드·합성 열화·대시보드까지 CNN 기준으로 검증된 점을 함께 고려했다.
 
 ## 0. 결론
 
-**최종 운영 구조는 `주의 = Ridge[first_difference]`, `경보 = Ridge AND MCD[diff_amp]`로 채택한다.**
+**이 실험에서는 `주의 = Ridge[first_difference]`, `경보 = Ridge AND MCD[diff_amp]` 조합을 검토했다.**
 
 time-block에서 AND는 평가 가능한 실제 이상 17/17과 탐지 지연 중앙값 0.9초를 유지하면서 세그먼트 오경보율을 Ridge 단독 0.0170에서 0.0025로 낮췄다. GroupKFold에서는 0.0206에서 0으로 낮아졌다. 세그먼트 쌍 부트스트랩에서 AND−Ridge 오경보율 차이의 95% 구간은 GroupKFold `−0.0340~−0.0094`, time-block `−0.0264~−0.0048`로 모두 0 아래였다.
 
@@ -123,14 +125,14 @@ MCD 시드 0·1·2에서 time-block 결과는 다음 범위였다.
 
 fold당 MCD 학습시간은 평균 3.59초, test 점수 계산은 피처가 준비된 상태에서 창당 평균 약 45 μs, 최대 약 100 μs였다. 실시간 시스템에서는 1초 윈도우 피처 계산시간과 센서 I/O가 추가된다. 모델 점수 계산 자체는 10 Hz 운영에 충분히 작다.
 
-## 8. 최종 운영 구조
+## 8. Ridge 결합 검토 결과
 
 | 단계 | 규칙 | time-block 세그먼트 FPR | 실제 이상 | 조치 제안 |
 |---|---|---:|---:|---|
 | **주의** | Ridge `[first_difference]` 초과 | 1.70% | 17/17 | 점검 목록 등록, 다음 burst 추세 확인 |
 | **경보** | Ridge AND MCD `[diff_amp]` 초과 | **0.25%** | **17/17** | 즉시 설비 상태 확인, 필요 시 정지 판단 |
 
-경보는 항상 주의의 부분집합이다. OR 단계를 추가하지 않으며, calibrated mean도 운영에는 쓰지 않는다. 임계값은 최종 학습 시 최신 정상 calibration block으로 다시 고정한다.
+경보는 항상 주의의 부분집합이다. OR 단계를 추가하지 않으며, calibrated mean도 사용하지 않는다.
 
 ## 9. 한계
 
