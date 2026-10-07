@@ -34,10 +34,13 @@ python src/extract.py                               # data/raw/ 로 해제 (노�
 cd notebooks
 PYTHONUTF8=1 jupyter nbconvert --to notebook --execute --inplace 01_data_quality.ipynb
 PYTHONUTF8=1 jupyter nbconvert --to notebook --execute --inplace 02_diagnosis_deep.ipynb
+# 전체를 순서대로 다시 돌리려면 (저장소 루트에서, 가중치·캐시가 없으면 학습부터 다시 하며 CPU 약 2.5시간)
+python src/run_all.py                               # 순서·건너뛰는 노트북·소요 시간 로그: src/run_all.py, docs/reproducibility_check.md
 ```
 
 - 노트북은 `notebooks/` 안에서 실행한다는 전제로 경로를 잡는다 (`ROOT = cwd.parent`, `sys.path`에 `src/` 추가).
 - Windows에서 노트북 실행 시 한글 출력 깨짐 방지: `PYTHONUTF8=1` 환경변수 설정.
+- 실행 순서는 번호순이 아니라 입력 계약을 따른다: 04는 11의 `11_window_features.parquet`을 읽으므로 **11 다음**에 돌린다(그 외 의존은 `src/run_all.py`의 `ORDER` 주석 참고).
 
 ## 폴더별 작업 방법
 
