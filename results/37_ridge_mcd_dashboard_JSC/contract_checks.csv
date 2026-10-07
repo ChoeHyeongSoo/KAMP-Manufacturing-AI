@@ -1,0 +1,7 @@
+﻿check,passed,detail
+AND 점수 관계,True,"z_alarm = min(z_ridge, z_mcd)"
+정상 평가 세그먼트,True,417개
+대표 이상 세그먼트,True,17개
+이상 경보 포함,True,경보 17/17
+정상 저부하 경보 없음,True,저부하 경보 0개
+저장 성능표 탐지 일치,True,time-block 17/17

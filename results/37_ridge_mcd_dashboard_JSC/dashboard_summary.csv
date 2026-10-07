@@ -1,0 +1,10 @@
+﻿metric,value,unit,source,note
+주의 세그먼트 FPR,0.0169588037235096,ratio,23 summary.csv,time-block 평균
+경보 세그먼트 FPR,0.0024509803921568,ratio,23 summary.csv,time-block 평균
+주의 이상 탐지,17.0,segments,23 summary.csv,판정 가능 17세그먼트
+경보 이상 탐지,17.0,segments,23 summary.csv,판정 가능 17세그먼트
+경보 지연 중앙값,0.9,s,23 summary.csv,burst 내부 최초 판정
+경보 고부하 FPR,0.0049019607843137,ratio,23 summary.csv,time-block
+경보 저부하 FPR,0.0,ratio,23 summary.csv,time-block
+Ridge 샘플 처리 최댓값,0.38753347368421054,ms/sample,34 stream_timing.csv,"형식 통일 후 입력 변환·예측, I/O 제외"
+MCD 포함 점수 계산 최댓값,0.09969883729692895,ms/window,23 timing.csv,"피처 준비 후 점수 계산, I/O 제외"
