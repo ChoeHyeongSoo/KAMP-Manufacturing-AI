@@ -47,6 +47,7 @@ ORDER = [
     "33_early_warning_JIW",
     "35_eval_detail_JIW",
     "36_conformal_pvalue_CHS",                 # 23 구조(main에 없으면 건너뜀)
+    "37_ridge_mcd_dashboard_JSC",              # 23 점수·34 처리시간·segments.csv로 정적 HTML 생성
 ]
 SKIP = {
     "34_alarm_chatbot_JIW": "로컬 LLM(약 3GB) 다운로드가 필요해 순차 실행에서 제외. 판정 성능과 무관",

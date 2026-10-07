@@ -98,11 +98,12 @@
 python -m venv .venv && .venv/Scripts/activate      # macOS·Linux: source .venv/bin/activate
 pip install -r requirements.txt                     # torch는 CPU 빌드
 # data/ 에 원본 zip을 둔 뒤
-python src/run_all.py                               # 노트북 24개 순차 실행, 로그 run_all_log.csv (CPU 약 2.5시간)
+python src/run_all.py                               # 노트북 25개 순차 실행, 로그 run_all_log.csv (CPU 약 2.5시간)
 python src/run_all.py --only 24_model_forecasting_JIW,28_model_ensemble_JIW   # 일부만
 ```
 
 - 가중치·캐시가 없으면 24~27·29(G2)·13은 학습부터 다시 하고, 28·33은 점수를 다시 수집한다. 있으면 불러온다(`RETRAIN`·`RECOLLECT` 플래그).
+- 37은 23의 저장 점수·34의 처리시간·`segments.csv`를 읽어 외부 서버 없이 정적 단일 HTML을 만든다. 전체 24개 재실행 점검 뒤 별도로 실행했고 계약 점검 6개(AND 점수 관계·정상 417개·이상 17개·이상 17/17 경보·저부하 경보 0개·저장 성능표 일치)가 모두 통과했다.
 - 결정적 결과(규칙·고전·MCD·PCA·conformal)는 비트 수준으로 재현되고, torch 학습 모델은 fpr_segment 기준 0.003 이내(29만 0.01·AUC 0.04 이내)의 차이가 난다. 결론·순위는 바뀌지 않는다.
 - 비교: `python src/repro_compare.py`가 재실행 결과를 커밋본과 대조해 파일별 shape·최대 절대차·초과 셀 수를 출력한다.
 
