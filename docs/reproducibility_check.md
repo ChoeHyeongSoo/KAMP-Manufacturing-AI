@@ -42,7 +42,7 @@
 | ① | README "시작하기" 순서(01~04 → 11~)대로 돌리면 04가 11의 parquet을 못 찾아 실패 | 순차 재현 실패 | `src/run_all.py` `ORDER`에서 04를 11 뒤로, README에 순서 주의 추가 |
 | ② | 12의 `assert len(FEATS) == 33`이 `features.feature_columns` 확장(relwin 4열, 21 rule3d·3e용) 뒤 실패 | 12 실행 불가 | 12에서 `_win`·`_cum` 4열을 제외해 33열 유지(리포트 수치 불변, 12 `results/` CSV 동일) |
 | ③ | main의 31이 23 `metrics.csv` 열 구성(`win_s`·`n_out_seg`·`n_detected` 없음) 때문에 실패 | 비교표 생성 불가 | PR #47에서 `cv_scores.csv`로 보완해 통과. #47 병합 필요 |
-| ④ | `docs/project_guide_JIW.md` 383행에 개인 PC 경로(`C:\Users\…`)가 들어 있음 | 블라인드 평가 식별 정보 | 소유자(JIW) 정정 요청. 그 외 노트북·리포트·`src`·`docs`에서 소속·이름·도구명·절대경로 grep 결과 없음 |
+| ④ | `docs/project_guide_JIW.md` 383행에 개인 PC 경로가 들어 있었음 | 블라인드 평가 식별 정보 | 저장소 상대 경로로 수정. 그 외 노트북·리포트·`src`·`docs`에서 소속·이름·도구명·절대경로 grep 결과 없음 |
 
 ## 4. 재실행 결과 대 커밋본 — 수치 차이
 

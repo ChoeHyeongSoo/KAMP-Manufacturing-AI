@@ -380,7 +380,7 @@ MCD에 사인 잔차 3개를 더하면 합성 이상 탐지가 0.10 → 0.23으�
 
 ```bash
 conda activate kamp            # Python 3.12, requirements.txt 설치된 환경
-cd C:\Users\SSAFY\KAMP-Manufacturing-AI
+cd KAMP-Manufacturing-AI
 set PYTHONUTF8=1               # cmd 기준 (PowerShell은 $env:PYTHONUTF8=1)
 python src/extract.py          # data/raw 생성
 cd notebooks
