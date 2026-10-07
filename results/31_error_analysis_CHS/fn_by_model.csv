@@ -118,6 +118,16 @@ notebook,model,win_s,split,seg_uid,seg_id,fn_category,n_miss
 21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_18,18,기타,0
 21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_19,19,전 채널 조용,1
 21_model_rule_baseline_CHS,rule3e_rms_state_dirz_cum,1.0,group_kfold_seg,outlier_20,20,전 채널 조용,1
+22_model_classical_timeseries_JSC,iforest_amp_w1s,1.0,group_kfold_seg,outlier_19,19,전 채널 조용,1
+22_model_classical_timeseries_JSC,iforest_amp_w1s,1.0,time_block,outlier_19,19,전 채널 조용,4
+22_model_classical_timeseries_JSC,kalman_innovation_w1s,1.0,group_kfold_seg,outlier_19,19,전 채널 조용,1
+22_model_classical_timeseries_JSC,kalman_innovation_w1s,1.0,group_kfold_seg,outlier_20,20,전 채널 조용,1
+22_model_classical_timeseries_JSC,kalman_innovation_w1s,1.0,time_block,outlier_19,19,전 채널 조용,4
+22_model_classical_timeseries_JSC,kalman_innovation_w1s,1.0,time_block,outlier_20,20,전 채널 조용,4
+22_model_classical_timeseries_JSC,naive_persistence_w1s,1.0,group_kfold_seg,outlier_19,19,전 채널 조용,1
+22_model_classical_timeseries_JSC,naive_persistence_w1s,1.0,group_kfold_seg,outlier_20,20,전 채널 조용,1
+22_model_classical_timeseries_JSC,naive_persistence_w1s,1.0,time_block,outlier_19,19,전 채널 조용,4
+22_model_classical_timeseries_JSC,naive_persistence_w1s,1.0,time_block,outlier_20,20,전 채널 조용,4
 26_model_distribution_JIW,copod_amp_rel_w1s,1.0,group_kfold_seg,outlier_19,19,전 채널 조용,1
 26_model_distribution_JIW,copod_amp_rel_w1s,1.0,time_block,outlier_19,19,전 채널 조용,4
 26_model_distribution_JIW,copod_amp_shape_w1s,1.0,group_kfold_seg,outlier_19,19,전 채널 조용,1
@@ -143,3 +153,23 @@ notebook,model,win_s,split,seg_uid,seg_id,fn_category,n_miss
 27_model_cnn_lstm_ae_CHS,cnn_lstm_ae_vib2_w1s,1.0,time_block,outlier_19,19,전 채널 조용,4
 27_model_cnn_lstm_ae_CHS,cnn_lstm_ae_vib2_w1s,1.0,time_block,outlier_20,20,전 채널 조용,4
 27_model_cnn_lstm_ae_CHS,cnn_lstm_ae_vib2_w1s,1.0,time_block,outlier_3,3,전 채널 조용,3
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,group_kfold_seg,outlier_14,14,기타,1
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,group_kfold_seg,outlier_18,18,기타,1
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,group_kfold_seg,outlier_19,19,전 채널 조용,1
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,group_kfold_seg,outlier_20,20,전 채널 조용,1
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,group_kfold_seg,outlier_3,3,전 채널 조용,1
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,group_kfold_seg,outlier_4,4,기타,1
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,time_block,outlier_12,12,기타,4
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,time_block,outlier_14,14,기타,4
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,time_block,outlier_17,17,기타,4
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,time_block,outlier_18,18,기타,4
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,time_block,outlier_19,19,전 채널 조용,4
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,time_block,outlier_20,20,전 채널 조용,4
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,time_block,outlier_3,3,전 채널 조용,4
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,time_block,outlier_4,4,기타,4
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w1s,1.0,time_block,outlier_7,7,기타,1
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w2s,2.0,group_kfold_seg,outlier_3,3,전 채널 조용,1
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w2s,2.0,time_block,outlier_12,12,기타,2
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w2s,2.0,time_block,outlier_17,17,기타,2
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w2s,2.0,time_block,outlier_18,18,기타,3
+29_model_guidebook_lstm_ae_JIW,lstm_ae_guidebook_w2s,2.0,time_block,outlier_3,3,전 채널 조용,4

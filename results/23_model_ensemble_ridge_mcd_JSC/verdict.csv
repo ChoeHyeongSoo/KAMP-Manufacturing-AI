@@ -1,0 +1,2 @@
+and_detects_all_actual,and_fpr_lower_ci,severity1_retention_vs_ridge,final_design
+True,True,0.4659637911169168,caution=ridge_diff; alarm=ridge&mcd

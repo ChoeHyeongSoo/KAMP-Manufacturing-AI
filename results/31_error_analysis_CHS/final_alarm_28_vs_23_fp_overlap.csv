@@ -1,0 +1,5 @@
+split,level,n_normal,fp_any_seed_28,fp_any_seed_23,fp_both,jaccard,fp_high_load_28,fp_high_load_23
+group_kfold_seg,주의,452,16,10,10,0.625,15,9
+group_kfold_seg,경보,452,3,0,0,0.0,3,0
+time_block,주의,354,8,6,5,0.5555555555555556,8,6
+time_block,경보,354,1,1,0,0.0,1,1
