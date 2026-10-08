@@ -76,7 +76,7 @@ def main() -> int:
     ap.add_argument("--from", dest="start")
     ap.add_argument("--to", dest="end")
     ap.add_argument("--only")
-    ap.add_argument("--kernel", default="kamp")
+    ap.add_argument("--kernel", default="python3", help="nbconvert 커널 이름(ipykernel 기본 등록명). 팀 로컬 환경은 --kernel kamp")
     ap.add_argument("--timeout", type=int, default=4 * 3600, help="노트북당 셀 타임아웃(초)")
     ap.add_argument("--log", default=str(ROOT / "run_all_log.csv"))
     ap.add_argument("--dry-run", action="store_true")

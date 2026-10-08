@@ -44,12 +44,14 @@ SINGLE_FILES = [  # (원본, 출력 내 경로)
     ("docs/submission_README.md", "README.md"),
 ]
 REPLACE_FILES = ["notebooks/31_error_analysis_CHS.ipynb", "reports/31_error_analysis_CHS.md"]
+# 개인 워크스페이스 링크가 든 행은 통째로 제거한다(원본 파일은 소유자 것이므로 복사본에서만)
+DROP_LINE_FILES = {"reports/00_data_input_suggestion_JSC.md": re.compile(r"notion\.site", re.I)}
 TEXT_EXT = {".py", ".ipynb", ".md", ".txt", ".csv", ".html", ".json"}
 FORBIDDEN = [
     ("claude", r"claude"), ("anthropic", r"anthropic"), ("copilot", r"copilot"), ("chatgpt", r"chatgpt"),
     ("CLAUDE.md", r"CLAUDE\.md"), ("C:/Users", r"C:[\/]+Users"), ("/Users/", r"/Users/"),
     ("ChoeHyeongSoo", r"ChoeHyeongSoo"), ("inwoonghub", r"inwoonghub"), ("JisuChung", r"JisuChung"),
-    ("github.com/", r"github\.com/"), ("email", r"[\w.+-]+@[\w-]+\.[\w.-]+"),
+    ("github.com/", r"github\.com/"), ("notion", r"notion\.site"), ("email", r"[\w.+-]+@[\w-]+\.[\w.-]+"),
 ]
 FORBIDDEN_RE = [(n, re.compile(p, re.I)) for n, p in FORBIDDEN]
 
@@ -152,6 +154,15 @@ def main() -> int:
         p.write_text(t, encoding="utf-8", newline="")
         n_sub += c
         print(f"치환 {rel}: {c}건")
+    for rel, rx in DROP_LINE_FILES.items():
+        p = dst / rel
+        if not p.exists():
+            continue
+        lines = p.read_text(encoding="utf-8").splitlines(keepends=True)
+        kept = [ln for ln in lines if not rx.search(ln)]
+        p.write_text("".join(kept), encoding="utf-8", newline="")
+        n_sub += len(lines) - len(kept)
+        print(f"행 제거 {rel}: {len(lines) - len(kept)}건")
 
     # 금지 문자열 검사
     hits: list = []
