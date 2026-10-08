@@ -2,6 +2,33 @@
 
 제6회 K-인공지능 제조데이터 분석 경진대회, 주제 ③ 소스코드 제출물이다. 정상 데이터로 학습한 시계열 모델이 이상을 일찍 탐지하면서 오경보를 낮추는 2단계 경보 구조를 만들고, 오류 조건과 현장 활용 방안까지 분석했다.
 
+## 0. 3분 안에 확인하기
+
+학습용 데이터는 `data/raw/`에 이미 들어 있어 추가 다운로드가 없다. Python 3.12에서 압축을 푼 폴더 루트에서 다음을 실행한다.
+
+```bash
+pip install -r requirements.txt
+python src/run_all.py --quick        # 결정적 노트북 7개(최종 모델 23 포함), 재학습 없음, CPU 약 3분
+python src/export_predictions.py     # 테스트 데이터 예측결과 재생성 → predictions/
+```
+
+`run_all.py`는 시작할 때 필수 패키지를 점검하고, 없으면 설치 명령을 안내하고 멈춘다(`--install`을 붙이면 설치까지 한다). 끝나면 최종 모델 요약을 표준 출력과 `results/summary_final.csv`에 남긴다. 기대 출력은 다음과 같다.
+
+```
+stage       rule           split    auc  fpr_segment  fpr_sample detected_segments  delay_median_s
+   주의 ridge_diff      time_block 1.0000       0.0170      0.0068             17/17             0.9
+   경보  ridge&mcd      time_block 0.9991       0.0025      0.0007             17/17             0.9
+```
+
+제출 요건별 위치:
+
+| 요건 | 위치 |
+|---|---|
+| 소스코드 | `src/*.py`, `notebooks/*.ipynb`(실행 결과 포함), `requirements.txt` |
+| 학습용 데이터 | `data/raw/press_data_normal.csv`, `data/raw/outlier_data.csv`, 원본 `data/3. 소성가공 예지보전 AI 데이터셋.zip` |
+| README | 이 파일. 데이터 설명 `data/README.md`, 결과 컬럼 `results/README.md` |
+| 테스트데이터 예측결과 | `predictions/` (설명 `predictions/README.md`), 요약 `results/summary_final.csv` |
+
 ## 1. 폴더 구조
 
 ```
@@ -37,6 +64,8 @@
 ```bash
 # 저장소(압축 해제한 폴더) 루트에서 — 입력 계약 순서대로 노트북 전체를 실행(CPU 약 2.5시간)
 python src/run_all.py
+python src/run_all.py --quick        # 결정적 노트북 7개만(0절)
+python src/run_all.py --only 24_model_forecasting_JIW,28_model_ensemble_JIW   # 일부만
 ```
 
 개별 노트북만 실행하려면 다음과 같이 한다.

@@ -1,7 +1,11 @@
 """노트북 전체 순차 실행 스크립트(재현성 점검용).
 
-사용: (저장소 루트에서) python src/run_all.py [--from NB] [--to NB] [--only NB,NB] [--log PATH] [--dry-run]
+사용: (저장소 루트에서) python src/run_all.py [--quick] [--from NB] [--to NB] [--only NB,NB] [--log PATH] [--dry-run]
+                                              [--install] [--skip-check] [--kernel NAME]
 
+- 시작할 때 필수 패키지(import·requirements.txt 고정 버전)를 점검한다. 없으면 설치 명령을 안내하고 종료 코드 2로 멈춘다(--install 이면 설치까지 수행).
+- --quick 은 결정적 노트북 7개(01·02·03·11·22·34·23, 재학습 없음, CPU 약 3분)만 돌린다. 전체는 약 2.5시간.
+- 끝나면 최종 모델(23)의 핵심 수치를 results/summary_final.csv 로 모아 표준 출력에 찍는다.
 - 실행 순서는 ORDER에 고정한다. 입력 계약(data/processed 파일, results/*/cv_scores.csv)의 의존 방향을 따른다.
 - SKIP의 노트북은 돌리지 않고 사유를 로그에 남긴다(34 챗봇: 약 3GB LLM 다운로드 필요).
 - 각 노트북은 notebooks/ 안에서 nbconvert --execute --inplace 로 실행하고, 소요 시간·성공 여부·오류 요약을 로그 CSV에 한 줄씩 기록한다.
@@ -52,6 +56,102 @@ ORDER = [
 SKIP = {
     "34_alarm_chatbot_JIW": "로컬 LLM(약 3GB) 다운로드가 필요해 순차 실행에서 제외. 판정 성능과 무관",
 }
+# --quick: 결정적 노트북만(재학습 없음, CPU 약 3분). 최종 모델 23까지의 입력 계약 순서
+QUICK = [
+    "01_data_quality", "02_diagnosis_deep", "03_diagnosis_recheck_CHS", "11_window_features_CHS",
+    "22_model_classical_timeseries_JSC", "34_realtime_input_validation_JSC", "23_model_ensemble_ridge_mcd_JSC",
+]
+# 의존성 점검: (import 이름, requirements.txt 패키지명). 선택 패키지(챗봇 34)는 경고만
+REQUIRED = [("pandas", "pandas"), ("numpy", "numpy"), ("scipy", "scipy"), ("sklearn", "scikit-learn"),
+            ("matplotlib", "matplotlib"), ("seaborn", "seaborn"), ("pyarrow", "pyarrow"), ("torch", "torch"),
+            ("pyod", "pyod"), ("tqdm", "tqdm"), ("nbconvert", "nbconvert"), ("nbformat", "nbformat"),
+            ("ipykernel", "ipykernel")]
+OPTIONAL = [("transformers", "transformers"), ("accelerate", "accelerate")]
+FINAL_NB = "23_model_ensemble_ridge_mcd_JSC"
+
+
+def pinned_versions() -> dict[str, str]:
+    """requirements.txt의 `pkg==ver` 행을 {pkg: ver}로 읽는다."""
+    out: dict[str, str] = {}
+    for line in (ROOT / "requirements.txt").read_text(encoding="utf-8").splitlines():
+        line = line.split("#", 1)[0].strip()
+        if "==" in line:
+            pkg, ver = line.split("==", 1)
+            out[pkg.strip().lower()] = ver.strip()
+    return out
+
+
+def check_deps(install: bool) -> bool:
+    """필수 패키지 import·고정 버전 일치를 확인한다. 빠지면 설치 명령을 안내하고 False.
+
+    --install 이면 `pip install -r requirements.txt`를 한 번 실행한 뒤 다시 확인한다.
+    """
+    from importlib import import_module, metadata
+
+    pins = pinned_versions()
+    missing, mismatch = [], []
+    for mod, pkg in REQUIRED:
+        try:
+            import_module(mod)
+        except Exception:  # noqa: BLE001
+            missing.append(pkg)
+            continue
+        try:
+            have = metadata.version(pkg)
+        except metadata.PackageNotFoundError:
+            continue
+        want = pins.get(pkg.lower())
+        if want and not have.startswith(want):
+            mismatch.append(f"{pkg} {have} (requirements {want})")
+    for mod, pkg in OPTIONAL:
+        try:
+            import_module(mod)
+        except Exception:  # noqa: BLE001
+            print(f"[안내] 선택 패키지 {pkg} 없음 - 34 챗봇 노트북만 영향, 판정 성능과 무관")
+    if mismatch:
+        print("[경고] 고정 버전과 다른 패키지(실행은 계속): " + "; ".join(mismatch))
+    if not missing:
+        return True
+    cmd = f"{sys.executable} -m pip install -r requirements.txt"
+    if install:
+        print(f"[설치] 누락 {', '.join(missing)} → {cmd}", flush=True)
+        r = subprocess.run([sys.executable, "-m", "pip", "install", "-r", str(ROOT / "requirements.txt")], cwd=ROOT)
+        if r.returncode == 0:
+            return check_deps(install=False)
+    print(f"[중단] 필수 패키지 없음: {', '.join(missing)}\n"
+          f"  저장소 루트에서 다음을 실행한 뒤 다시 시도: {cmd}\n"
+          f"  (torch 설치가 무거우면 CPU 빌드: {sys.executable} -m pip install torch==2.14.0 "
+          f"--index-url https://download.pytorch.org/whl/cpu)\n"
+          f"  또는 python src/run_all.py --install 로 설치까지 한 번에 진행")
+    return False
+
+
+def write_final_summary() -> None:
+    """최종 모델(23)의 핵심 수치를 results/summary_final.csv로 모으고 표준 출력에 찍는다."""
+    import pandas as pd
+
+    res = ROOT / "results" / FINAL_NB
+    if not (res / "summary.csv").exists() or not (res / "operating_decision.csv").exists():
+        print(f"[안내] {res.relative_to(ROOT)} 결과 없음 — 최종 요약 생략")
+        return
+    summ = pd.read_csv(res / "summary.csv")
+    dec = pd.read_csv(res / "operating_decision.csv")
+    rows = []
+    for _, d in dec.iterrows():
+        for split in ("time_block", "group_kfold_seg"):
+            s = summ[(summ["model"] == d["rule"]) & (summ["split"] == split)]
+            if s.empty:
+                continue
+            s = s.iloc[0]
+            rows.append({"stage": d["stage"], "rule": d["rule"], "split": split, "auc": round(float(s["auc"]), 4),
+                         "fpr_segment": round(float(s["fpr_segment"]), 4), "fpr_sample": round(float(s["fpr_sample"]), 4),
+                         "detected_segments": d["detected"] if split == "time_block" else "",
+                         "delay_median_s": s["delay_median_s"]})
+    out = pd.DataFrame(rows)
+    out.to_csv(ROOT / "results" / "summary_final.csv", index=False, encoding="utf-8")
+    print("\n=== 최종 모델(Ridge-VAR + MCD 2단계 경보, 노트북 23) 요약 → results/summary_final.csv ===")
+    print(out.to_string(index=False))
+    print("테스트 데이터(이상 파일) 예측결과: predictions/ (python src/export_predictions.py 로 재생성)")
 
 
 def run_one(nb: str, kernel: str, timeout: int) -> tuple[bool, float, str]:
@@ -72,6 +172,10 @@ def run_one(nb: str, kernel: str, timeout: int) -> tuple[bool, float, str]:
 
 
 def main() -> int:
+    # Windows cp949 콘솔에서도 깨지지 않게: 인코딩 불가 문자는 치환
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
     ap = argparse.ArgumentParser()
     ap.add_argument("--from", dest="start")
     ap.add_argument("--to", dest="end")
@@ -81,9 +185,17 @@ def main() -> int:
     ap.add_argument("--log", default=str(ROOT / "run_all_log.csv"))
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--stop-on-error", action="store_true")
+    ap.add_argument("--quick", action="store_true", help="결정적 노트북 7개만(최종 모델 23 포함, CPU 약 3분)")
+    ap.add_argument("--install", action="store_true", help="필수 패키지가 없으면 pip install -r requirements.txt 실행")
+    ap.add_argument("--skip-check", action="store_true", help="의존성 점검 생략")
     a = ap.parse_args()
 
+    if not a.dry_run and not a.skip_check and not check_deps(a.install):
+        return 2
+
     todo = list(ORDER)
+    if a.quick:
+        todo = list(QUICK)
     if a.only:
         todo = [n for n in ORDER if n in set(a.only.split(","))]
     else:
@@ -115,6 +227,8 @@ def main() -> int:
             f.flush()
             if not ok and status == "error" and a.stop_on_error:
                 return 1
+    if not a.dry_run:
+        write_final_summary()
     return 0
 
 
