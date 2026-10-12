@@ -1,0 +1,5 @@
+stage,rule,split,auc,fpr_segment,fpr_sample,detected_segments,delay_median_s
+주의,ridge_diff,time_block,1.0,0.017,0.0068,17/17,0.9
+주의,ridge_diff,group_kfold_seg,1.0,0.0206,0.01,,0.9
+경보,ridge&mcd,time_block,0.9991,0.0025,0.0007,17/17,0.9
+경보,ridge&mcd,group_kfold_seg,0.9954,0.0,0.0,,0.9
